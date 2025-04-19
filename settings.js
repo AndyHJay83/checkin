@@ -79,10 +79,19 @@ function loadEvents() {
     try {
         const storedEvents = localStorage.getItem('events');
         console.log('Stored events:', storedEvents);
-        events = storedEvents ? JSON.parse(storedEvents) : [];
+        if (storedEvents) {
+            events = JSON.parse(storedEvents);
+        } else {
+            events = [];
+            // Initialize with empty array if no events exist
+            localStorage.setItem('events', JSON.stringify(events));
+        }
     } catch (error) {
         console.error('Error loading events:', error);
+        events = [];
     }
+
+    console.log('Events to display:', events);
 
     if (events.length === 0) {
         eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
@@ -102,7 +111,10 @@ function loadEvents() {
 function selectEvent(eventId) {
     console.log('Selecting event:', eventId);
     currentEventId = eventId;
-    document.getElementById('guestForm').classList.remove('hidden');
+    const guestForm = document.getElementById('guestForm');
+    if (guestForm) {
+        guestForm.classList.remove('hidden');
+    }
     loadGuests();
     loadEvents(); // Refresh to highlight selected event
 }
