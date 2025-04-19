@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/qrcode-generator@1.5.3/build/qrcode.js"></script>
+    <script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
     <script>
+        // Global variables
+        let currentEventId = null;
+        let editingGuestId = null;
+
         // Function to edit a guest
         function editGuest(guestId) {
             const username = localStorage.getItem('username');
