@@ -10,10 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const username = localStorage.getItem('username');
+    console.log('Current username:', username);
 
     // Get event ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     currentEventId = urlParams.get('id');
+    console.log('Current event ID:', currentEventId);
 
     if (!currentEventId) {
         window.location.href = 'settings.html';
@@ -57,9 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Get events from localStorage
         const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+        console.log('Current events:', events);
         
         // Find current event and add/edit guest
         const eventIndex = events.findIndex(e => e.id === currentEventId);
+        console.log('Event index:', eventIndex);
+        
         if (eventIndex !== -1) {
             if (editingGuestId) {
                 // Update existing guest
@@ -75,18 +80,22 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Add new guest
                 if (!events[eventIndex].guests) {
+                    console.log('Initializing guests array for event');
                     events[eventIndex].guests = [];
                 }
-                events[eventIndex].guests.push({
+                const newGuest = {
                     id: Date.now().toString(),
                     name: guestName,
                     count: guestCount,
                     checkedIn: false
-                });
+                };
+                console.log('Adding new guest:', newGuest);
+                events[eventIndex].guests.push(newGuest);
             }
         }
 
         // Save back to localStorage
+        console.log('Saving updated events:', events);
         localStorage.setItem(`events_${username}`, JSON.stringify(events));
 
         // Clear input and hide modal
@@ -140,7 +149,7 @@ function loadGuests() {
     
     const guestsList = document.getElementById('guestsList');
     const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    console.log('Events from storage:', events);
+    console.log('All events:', events);
     
     const event = events.find(e => e.id === currentEventId);
     console.log('Current event:', event);
@@ -153,7 +162,7 @@ function loadGuests() {
     }
 
     if (!event.guests) {
-        console.log('No guests array found in event');
+        console.log('No guests array found in event, initializing empty array');
         event.guests = [];
         localStorage.setItem(`events_${username}`, JSON.stringify(events));
     }
