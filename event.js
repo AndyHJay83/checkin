@@ -1,9 +1,10 @@
 // Global variables
 let currentEventId = null;
 let editingGuestId = null;
+const API_URL = 'http://localhost:3000/api';
 
 // Initialize the page
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Check if user is logged in
     if (!localStorage.getItem('isLoggedIn')) {
         window.location.href = 'login.html';
@@ -44,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Handle guest addition/editing
-    confirmAddGuest.addEventListener('click', () => {
+    confirmAddGuest.addEventListener('click', async () => {
         const guestName = document.getElementById('guestNameInput').value.trim();
         const guestCount = parseInt(document.getElementById('guestCountInput').value) || 1;
         
@@ -58,15 +59,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Get events from localStorage
-        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-        console.log('Current events:', events);
-        
-        // Find current event and add/edit guest
-        const eventIndex = events.findIndex(e => e.id === currentEventId);
-        console.log('Event index:', eventIndex);
-        
-        if (eventIndex !== -1) {
+        try {
+            // Get current event
+            const username = localStorage.getItem('username');
+            const response = await fetch(`${API_URL}/events/${username}`);
+            if (!response.ok) throw new Error('Failed to load events');
+            const events = await response.json();
+            
+            // Find current event
+            const eventIndex = events.findIndex(e => e.id === currentEventId);
+            if (eventIndex === -1) throw new Error('Event not found');
+            
             if (editingGuestId) {
                 // Update existing guest
                 const guestIndex = events[eventIndex].guests.findIndex(g => g.id === editingGuestId);
@@ -81,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Add new guest
                 if (!events[eventIndex].guests) {
-                    console.log('Initializing guests array for event');
                     events[eventIndex].guests = [];
                 }
                 const newGuest = {
@@ -90,23 +92,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     count: guestCount,
                     checkedIn: false
                 };
-                console.log('Adding new guest:', newGuest);
                 events[eventIndex].guests.push(newGuest);
             }
+
+            // Save updated event
+            const saveResponse = await fetch(`${API_URL}/event`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username,
+                    event: events[eventIndex]
+                }),
+            });
+            
+            if (!saveResponse.ok) throw new Error('Failed to save event');
+
+            // Clear input and hide modal
+            document.getElementById('guestNameInput').value = '';
+            document.getElementById('guestCountInput').value = '1';
+            addGuestModal.classList.add('hidden');
+            editingGuestId = null;
+
+            // Refresh guests list
+            loadGuests();
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
         }
-
-        // Save back to localStorage
-        console.log('Saving updated events:', events);
-        localStorage.setItem(`events_${username}`, JSON.stringify(events));
-
-        // Clear input and hide modal
-        document.getElementById('guestNameInput').value = '';
-        document.getElementById('guestCountInput').value = '1';
-        addGuestModal.classList.add('hidden');
-        editingGuestId = null;
-
-        // Refresh guests list
-        loadGuests();
     });
 
     // Load event details and guests
@@ -115,110 +129,151 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Function to load event details
-function loadEventDetails() {
-    const username = localStorage.getItem('username');
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    const currentEvent = events.find(event => event.id === currentEventId);
+async function loadEventDetails() {
+    try {
+        const username = localStorage.getItem('username');
+        const response = await fetch(`${API_URL}/events/${username}`);
+        if (!response.ok) throw new Error('Failed to load events');
+        const events = await response.json();
+        const currentEvent = events.find(event => event.id === currentEventId);
 
-    if (currentEvent) {
-        document.getElementById('eventTitle').textContent = currentEvent.name;
-    } else {
-        window.location.href = 'settings.html';
+        if (currentEvent) {
+            document.getElementById('eventTitle').textContent = currentEvent.name;
+        } else {
+            window.location.href = 'settings.html';
+        }
+    } catch (error) {
+        console.error('Error loading event details:', error);
+        alert('Failed to load event details');
     }
 }
 
 // Function to load guests
-function loadGuests() {
-    const username = localStorage.getItem('username');
-    console.log('Loading guests for username:', username);
-    
-    const guestsList = document.getElementById('guestsList');
-    if (!guestsList) {
-        console.error('guestsList element not found');
-        return;
-    }
-    
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    console.log('All events:', events);
-    
-    const event = events.find(e => e.id === currentEventId);
-    console.log('Current event:', event);
-    console.log('Current event ID:', currentEventId);
+async function loadGuests() {
+    try {
+        const username = localStorage.getItem('username');
+        const response = await fetch(`${API_URL}/events/${username}`);
+        if (!response.ok) throw new Error('Failed to load events');
+        const events = await response.json();
+        const event = events.find(e => e.id === currentEventId);
 
-    if (!event) {
-        console.log('Event not found');
-        guestsList.innerHTML = '<p class="text-gray-500">Event not found.</p>';
-        return;
-    }
+        if (!event) {
+            console.log('Event not found');
+            document.getElementById('guestsList').innerHTML = '<p class="text-gray-500">Event not found.</p>';
+            return;
+        }
 
-    if (!event.guests) {
-        console.log('No guests array found in event, initializing empty array');
-        event.guests = [];
-        localStorage.setItem(`events_${username}`, JSON.stringify(events));
-    }
+        if (!event.guests) {
+            console.log('No guests array found in event, initializing empty array');
+            event.guests = [];
+            // Save the event with empty guests array
+            await fetch(`${API_URL}/event`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username,
+                    event
+                }),
+            });
+        }
 
-    if (event.guests.length === 0) {
-        console.log('No guests in the array');
-        guestsList.innerHTML = '<p class="text-gray-500">No guests added yet.</p>';
-        return;
-    }
+        if (event.guests.length === 0) {
+            console.log('No guests in the array');
+            document.getElementById('guestsList').innerHTML = '<p class="text-gray-500">No guests added yet.</p>';
+            return;
+        }
 
-    console.log('Guests to display:', event.guests);
-    guestsList.innerHTML = event.guests.map(guest => `
-        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
-            <div>
-                <h3 class="font-semibold">${guest.name}</h3>
-                <p class="text-sm text-gray-500">${guest.count} guest${guest.count > 1 ? 's' : ''}</p>
-                <p class="text-sm ${guest.checkedIn ? 'text-green-500' : 'text-gray-500'}">
-                    ${guest.checkedIn ? 'Checked in' : 'Not checked in'}
-                </p>
+        console.log('Guests to display:', event.guests);
+        document.getElementById('guestsList').innerHTML = event.guests.map(guest => `
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
+                <div>
+                    <h3 class="font-semibold">${guest.name}</h3>
+                    <p class="text-sm text-gray-500">${guest.count} guest${guest.count > 1 ? 's' : ''}</p>
+                    <p class="text-sm ${guest.checkedIn ? 'text-green-500' : 'text-gray-500'}">
+                        ${guest.checkedIn ? 'Checked in' : 'Not checked in'}
+                    </p>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="showQRCode(${JSON.stringify(guest).replace(/"/g, '&quot;')})" 
+                            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                        Show QR
+                    </button>
+                    <button onclick="editGuest('${guest.id}')" 
+                            class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
+                        Edit
+                    </button>
+                    <button onclick="removeGuest('${guest.id}')" 
+                            class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+                        Remove
+                    </button>
+                </div>
             </div>
-            <div class="flex space-x-2">
-                <button onclick="showQRCode(${JSON.stringify(guest).replace(/"/g, '&quot;')})" 
-                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                    Show QR
-                </button>
-                <button onclick="editGuest('${guest.id}')" 
-                        class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
-                    Edit
-                </button>
-                <button onclick="removeGuest('${guest.id}')" 
-                        class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
-                    Remove
-                </button>
-            </div>
-        </div>
-    `).join('');
+        `).join('');
+    } catch (error) {
+        console.error('Error loading guests:', error);
+        alert('Failed to load guests');
+    }
 }
 
 // Function to edit a guest
-function editGuest(guestId) {
-    const username = localStorage.getItem('username');
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    const event = events.find(e => e.id === currentEventId);
-    const guest = event.guests.find(g => g.id === guestId);
+async function editGuest(guestId) {
+    try {
+        const username = localStorage.getItem('username');
+        const response = await fetch(`${API_URL}/events/${username}`);
+        if (!response.ok) throw new Error('Failed to load events');
+        const events = await response.json();
+        const event = events.find(e => e.id === currentEventId);
+        const guest = event.guests.find(g => g.id === guestId);
 
-    if (guest) {
-        editingGuestId = guestId;
-        document.getElementById('guestNameInput').value = guest.name;
-        document.getElementById('guestCountInput').value = guest.count;
-        document.getElementById('confirmAddGuest').textContent = 'Update';
-        document.getElementById('addGuestModal').classList.remove('hidden');
+        if (guest) {
+            editingGuestId = guestId;
+            document.getElementById('guestNameInput').value = guest.name;
+            document.getElementById('guestCountInput').value = guest.count;
+            document.getElementById('confirmAddGuest').textContent = 'Update';
+            document.getElementById('addGuestModal').classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error editing guest:', error);
+        alert('Failed to load guest details');
     }
 }
 
 // Function to remove a guest
-function removeGuest(guestId) {
-    if (confirm('Are you sure you want to remove this guest?')) {
+async function removeGuest(guestId) {
+    if (!confirm('Are you sure you want to remove this guest?')) return;
+
+    try {
         const username = localStorage.getItem('username');
-        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-        const eventIndex = events.findIndex(e => e.id === currentEventId);
-        
-        if (eventIndex !== -1) {
-            events[eventIndex].guests = events[eventIndex].guests.filter(g => g.id !== guestId);
-            localStorage.setItem(`events_${username}`, JSON.stringify(events));
+        const response = await fetch(`${API_URL}/events/${username}`);
+        if (!response.ok) throw new Error('Failed to load events');
+        const events = await response.json();
+        const event = events.find(e => e.id === currentEventId);
+
+        if (event) {
+            event.guests = event.guests.filter(g => g.id !== guestId);
+            
+            // Save updated event
+            const saveResponse = await fetch(`${API_URL}/event`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username,
+                    event
+                }),
+            });
+            
+            if (!saveResponse.ok) throw new Error('Failed to save event');
+            
+            // Refresh guests list
             loadGuests();
         }
+    } catch (error) {
+        console.error('Error removing guest:', error);
+        alert('Failed to remove guest');
     }
 }
 
