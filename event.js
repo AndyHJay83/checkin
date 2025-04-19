@@ -174,8 +174,10 @@ function loadGuests() {
     }
 
     console.log('Guests to display:', event.guests);
-    guestsList.innerHTML = event.guests.map(guest => `
-        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
+    const guestCards = event.guests.map(guest => {
+        const guestCard = document.createElement('div');
+        guestCard.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4';
+        guestCard.innerHTML = `
             <div>
                 <h3 class="font-semibold">${guest.name}</h3>
                 <p class="text-sm text-gray-500">${guest.count} guest${guest.count > 1 ? 's' : ''}</p>
@@ -197,8 +199,12 @@ function loadGuests() {
                     Remove
                 </button>
             </div>
-        </div>
-    `).join('');
+        `;
+        return guestCard;
+    });
+
+    guestsList.innerHTML = '';
+    guestCards.forEach(card => guestsList.appendChild(card));
 }
 
 function showQRCode(eventId, guestId) {
