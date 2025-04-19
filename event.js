@@ -237,17 +237,13 @@ function showQRCode(guestData) {
         return;
     }
     
-    // Create QR data with both guest and event information
+    // Create QR data with the structure expected by script.js
     const qrData = {
-        event: {
-            id: event.id,
-            name: event.name
-        },
-        guest: {
-            id: guestData.id,
-            name: guestData.name,
-            count: guestData.count
-        }
+        eventId: event.id,
+        id: guestData.id,
+        firstName: guestData.name.split(' ')[0],
+        lastName: guestData.name.split(' ').slice(1).join(' '),
+        ticketCount: guestData.count
     };
     
     // Clear previous QR code

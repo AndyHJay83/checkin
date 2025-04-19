@@ -84,19 +84,29 @@ function closeModal() {
 
 // Function to update guest status in localStorage
 function updateGuestStatus(guestData) {
-    let events = JSON.parse(localStorage.getItem('events') || '[]');
+    const username = localStorage.getItem('username');
+    let events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+    
+    // Find the event and update the guest's check-in status
     events = events.map(event => {
         if (event.id === guestData.eventId) {
-            event.guests = event.guests.map(guest => {
-                if (guest.id === guestData.id) {
-                    return { ...guest, checkedIn: true };
-                }
-                return guest;
-            });
+            if (event.guests) {
+                event.guests = event.guests.map(guest => {
+                    if (guest.id === guestData.id) {
+                        return { ...guest, checkedIn: true };
+                    }
+                    return guest;
+                });
+            }
         }
         return event;
     });
-    localStorage.setItem('events', JSON.stringify(events));
+    
+    // Save the updated events back to localStorage
+    localStorage.setItem(`events_${username}`, JSON.stringify(events));
+    
+    // Show success message
+    alert('Guest checked in successfully!');
 }
 
 // Start scanning when the page loads
