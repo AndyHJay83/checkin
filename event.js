@@ -136,15 +136,35 @@ function editGuest(guestId) {
 // Function to load guests
 function loadGuests() {
     const username = localStorage.getItem('username');
+    console.log('Loading guests for username:', username);
+    
     const guestsList = document.getElementById('guestsList');
     const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+    console.log('Events from storage:', events);
+    
     const event = events.find(e => e.id === currentEventId);
+    console.log('Current event:', event);
+    console.log('Current event ID:', currentEventId);
 
-    if (!event || !event.guests || event.guests.length === 0) {
+    if (!event) {
+        console.log('Event not found');
+        guestsList.innerHTML = '<p class="text-gray-500">Event not found.</p>';
+        return;
+    }
+
+    if (!event.guests) {
+        console.log('No guests array found in event');
+        event.guests = [];
+        localStorage.setItem(`events_${username}`, JSON.stringify(events));
+    }
+
+    if (event.guests.length === 0) {
+        console.log('No guests in the array');
         guestsList.innerHTML = '<p class="text-gray-500">No guests added yet.</p>';
         return;
     }
 
+    console.log('Guests to display:', event.guests);
     guestsList.innerHTML = event.guests.map(guest => `
         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
             <div>
