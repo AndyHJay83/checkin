@@ -6,6 +6,42 @@
     <title>Event Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
+    <script>
+        // Global variables
+        let currentEventId = null;
+        let editingGuestId = null;
+
+        // Function to edit a guest
+        function editGuest(guestId) {
+            const username = localStorage.getItem('username');
+            const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+            const event = events.find(e => e.id === currentEventId);
+            const guest = event.guests.find(g => g.id === guestId);
+
+            if (guest) {
+                editingGuestId = guestId;
+                document.getElementById('guestNameInput').value = guest.name;
+                document.getElementById('guestCountInput').value = guest.count;
+                document.getElementById('confirmAddGuest').textContent = 'Update';
+                document.getElementById('addGuestModal').classList.remove('hidden');
+            }
+        }
+
+        // Function to remove a guest
+        function removeGuest(guestId) {
+            if (confirm('Are you sure you want to remove this guest?')) {
+                const username = localStorage.getItem('username');
+                const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+                const eventIndex = events.findIndex(e => e.id === currentEventId);
+                
+                if (eventIndex !== -1) {
+                    events[eventIndex].guests = events[eventIndex].guests.filter(g => g.id !== guestId);
+                    localStorage.setItem(`events_${username}`, JSON.stringify(events));
+                    loadGuests();
+                }
+            }
+        }
+    </script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
