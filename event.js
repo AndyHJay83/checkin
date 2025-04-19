@@ -1,4 +1,5 @@
-currentEventId = urlParams.get('id');
+// Global variables
+let currentEventId = null;
 let editingGuestId = null;
 
 // Initialize the page
@@ -126,22 +127,6 @@ function loadEventDetails() {
     }
 }
 
-// Function to edit a guest
-function editGuest(guestId) {
-    const username = localStorage.getItem('username');
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    const event = events.find(e => e.id === currentEventId);
-    const guest = event.guests.find(g => g.id === guestId);
-
-    if (guest) {
-        editingGuestId = guestId;
-        document.getElementById('guestNameInput').value = guest.name;
-        document.getElementById('guestCountInput').value = guest.count;
-        document.getElementById('confirmAddGuest').textContent = 'Update';
-        document.getElementById('addGuestModal').classList.remove('hidden');
-    }
-}
-
 // Function to load guests
 function loadGuests() {
     const username = localStorage.getItem('username');
@@ -206,78 +191,20 @@ function loadGuests() {
     `).join('');
 }
 
-function showQRCode(eventId, guestId) {
+// Function to edit a guest
+function editGuest(guestId) {
     const username = localStorage.getItem('username');
-    console.log('Showing QR code for event:', eventId, 'guest:', guestId);
     const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    const event = events.find(e => e.id === eventId);
+    const event = events.find(e => e.id === currentEventId);
     const guest = event.guests.find(g => g.id === guestId);
 
-    if (!guest) {
-        console.error('Guest not found');
-        return;
+    if (guest) {
+        editingGuestId = guestId;
+        document.getElementById('guestNameInput').value = guest.name;
+        document.getElementById('guestCountInput').value = guest.count;
+        document.getElementById('confirmAddGuest').textContent = 'Update';
+        document.getElementById('addGuestModal').classList.remove('hidden');
     }
-
-    const qrData = JSON.stringify({
-        eventId: eventId,
-        guestId: guestId,
-        guestName: guest.name,
-        guestCount: guest.count
-    });
-
-    const qrCodeContainer = document.getElementById('qrCodeContainer');
-    qrCodeContainer.innerHTML = '';
-
-    // Create QR code using the qrcode-generator library
-    const qr = qrcode(0, 'M');
-    qr.addData(qrData);
-    qr.make();
-    
-    // Create canvas element
-    const canvas = document.createElement('canvas');
-    const size = 200;
-    canvas.width = size;
-    canvas.height = size;
-    
-    // Get canvas context and draw QR code
-    const ctx = canvas.getContext('2d');
-    const cells = qr.modules;
-    const tileW = size / cells.length;
-    const tileH = size / cells.length;
-    
-    // Draw white background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, size, size);
-    
-    // Draw QR code
-    ctx.fillStyle = '#000000';
-    for (let row = 0; row < cells.length; row++) {
-        for (let col = 0; col < cells.length; col++) {
-            if (cells[row][col]) {
-                ctx.fillRect(col * tileW, row * tileH, tileW, tileH);
-            }
-        }
-    }
-    
-    // Add canvas to container
-    qrCodeContainer.appendChild(canvas);
-    document.getElementById('qrCodeModal').classList.remove('hidden');
-}
-
-function closeQRCodeModal() {
-    document.getElementById('qrCodeModal').classList.add('hidden');
-    const qrCodeContainer = document.getElementById('qrCodeContainer');
-    qrCodeContainer.innerHTML = '';
-}
-
-function saveQRCode() {
-    const canvas = document.querySelector('#qrCodeContainer canvas');
-    if (!canvas) return;
-
-    const link = document.createElement('a');
-    link.download = 'guest-qr-code.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
 }
 
 // Function to remove a guest
@@ -293,4 +220,50 @@ function removeGuest(guestId) {
             loadGuests();
         }
     }
+}
+
+// Function to show QR code
+function showQRCode(eventId, guestId) {
+    const username = localStorage.getItem('username');
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+    const event = events.find(e => e.id === eventId);
+    const guest = event.guests.find(g => g.id === guestId);
+
+    if (guest) {
+        const qrData = JSON.stringify({
+            eventId: eventId,
+            guestId: guestId,
+            guestName: guest.name
+        });
+
+        const qrCodeContainer = document.getElementById('qrCodeContainer');
+        qrCodeContainer.innerHTML = '';
+        
+        QRCode.toCanvas(qrCodeContainer, qrData, {
+            width: 200,
+            margin: 2,
+            color: {
+                dark: '#000000',
+                light: '#ffffff'
+            }
+        }, function (error) {
+            if (error) console.error(error);
+        });
+
+        document.getElementById('qrCodeModal').classList.remove('hidden');
+    }
+}
+
+// Function to close QR code modal
+function closeQRCodeModal() {
+    document.getElementById('qrCodeModal').classList.add('hidden');
+}
+
+// Function to save QR code
+function saveQRCode() {
+    const canvas = document.querySelector('#qrCodeContainer canvas');
+    const link = document.createElement('a');
+    link.download = 'guest-qr-code.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
 } 
