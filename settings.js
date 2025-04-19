@@ -184,13 +184,18 @@ function loadGuests() {
             eventId: currentEventId
         });
         
-        QRCode.toCanvas(document.getElementById(`qrcode-${guest.id}`), qrData, {
+        // Clear any existing QR code
+        const qrElement = document.getElementById(`qrcode-${guest.id}`);
+        qrElement.innerHTML = '';
+        
+        // Generate new QR code
+        new QRCode(qrElement, {
+            text: qrData,
             width: 100,
-            margin: 1,
-            color: {
-                dark: '#000000',
-                light: '#ffffff'
-            }
+            height: 100,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
         });
     });
 }
