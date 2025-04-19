@@ -2,15 +2,6 @@ let html5QrcodeScanner = null;
 
 // Function to start scanning
 async function startScanning() {
-    const reader = document.getElementById('reader');
-    const startButton = document.getElementById('startScanning');
-    const stopButton = document.getElementById('stopScanning');
-    
-    // Hide the start button and show the scanner and stop button
-    startButton.classList.add('hidden');
-    stopButton.classList.remove('hidden');
-    reader.classList.remove('hidden');
-    
     try {
         // Initialize the scanner with back camera
         html5QrcodeScanner = new Html5Qrcode("reader");
@@ -33,34 +24,10 @@ async function startScanning() {
             );
         } else {
             console.error('No cameras found');
-            stopScanning();
         }
     } catch (error) {
         console.error('Error starting scanner:', error);
-        stopScanning();
     }
-}
-
-// Function to stop scanning
-async function stopScanning() {
-    const reader = document.getElementById('reader');
-    const startButton = document.getElementById('startScanning');
-    const stopButton = document.getElementById('stopScanning');
-    
-    // Stop the scanner
-    if (html5QrcodeScanner) {
-        try {
-            await html5QrcodeScanner.stop();
-            html5QrcodeScanner = null;
-        } catch (error) {
-            console.error('Error stopping scanner:', error);
-        }
-    }
-    
-    // Show the start button and hide the scanner and stop button
-    startButton.classList.remove('hidden');
-    stopButton.classList.add('hidden');
-    reader.classList.add('hidden');
 }
 
 // Function to handle successful scan
@@ -71,7 +38,13 @@ function onScanSuccess(decodedText, decodedResult) {
         updateGuestStatus(guestData);
         
         // Stop scanning after successful scan
-        stopScanning();
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop();
+            html5QrcodeScanner = null;
+        }
+        
+        // Restart scanning after a short delay
+        setTimeout(startScanning, 2000);
     } catch (error) {
         console.error('Invalid QR code data');
     }
@@ -124,4 +97,7 @@ function updateGuestStatus(guestData) {
         return event;
     });
     localStorage.setItem('events', JSON.stringify(events));
-} 
+}
+
+// Start scanning when the page loads
+document.addEventListener('DOMContentLoaded', startScanning); 
