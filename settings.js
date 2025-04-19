@@ -45,11 +45,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const username = localStorage.getItem('username');
+            console.log('Creating event for username:', username);
+            
             const newEvent = {
                 id: Date.now().toString(),
                 name: eventName,
                 guests: []
             };
+            console.log('New event data:', newEvent);
 
             fetch(`http://localhost:3000/api/events/${username}`, {
                 method: 'POST',
@@ -59,9 +62,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(newEvent)
             })
             .then(response => {
+                console.log('Server response status:', response.status);
                 if (!response.ok) {
-                    throw new Error('Failed to create event');
+                    return response.json().then(err => {
+                        console.error('Server error:', err);
+                        throw new Error(err.error || 'Failed to create event');
+                    });
                 }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Event created successfully:', data);
                 // Clear input and hide modal
                 document.getElementById('eventNameInput').value = '';
                 createEventModal.classList.add('hidden');
@@ -70,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => {
                 console.error('Error creating event:', error);
-                alert('Error creating event. Please try again.');
+                alert(error.message || 'Error creating event. Please try again.');
             });
         };
     }

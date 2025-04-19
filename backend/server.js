@@ -14,22 +14,31 @@ app.post('/api/events/:username', (req, res) => {
     const { username } = req.params;
     const event = req.body;
     
+    console.log('Received event creation request:');
+    console.log('Username:', username);
+    console.log('Event data:', event);
+    
     if (!username) {
+        console.log('Error: Username is required');
         return res.status(400).json({ error: 'Username is required' });
     }
     
     if (!event || !event.name) {
+        console.log('Error: Event name is required');
         return res.status(400).json({ error: 'Event name is required' });
     }
     
     try {
         // Initialize user's events array if it doesn't exist
         if (!users[username]) {
+            console.log('Initializing new user:', username);
             users[username] = { events: [] };
         }
         
         // Add the new event
+        console.log('Adding event to user:', username);
         users[username].events.push(event);
+        console.log('Current events for user:', users[username].events);
         
         res.json({ success: true, event });
     } catch (error) {
