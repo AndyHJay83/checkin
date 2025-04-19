@@ -239,15 +239,14 @@ function showQRCode(eventId, guestId) {
         const qrCodeContainer = document.getElementById('qrCodeContainer');
         qrCodeContainer.innerHTML = '';
         
-        QRCode.toCanvas(qrCodeContainer, qrData, {
+        // Create new QR code
+        new QRCode(qrCodeContainer, {
+            text: qrData,
             width: 200,
-            margin: 2,
-            color: {
-                dark: '#000000',
-                light: '#ffffff'
-            }
-        }, function (error) {
-            if (error) console.error(error);
+            height: 200,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
         });
 
         document.getElementById('qrCodeModal').classList.remove('hidden');
