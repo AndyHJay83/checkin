@@ -1,5 +1,4 @@
-// Global variables
-let currentEventId = null;
+currentEventId = urlParams.get('id');
 let editingGuestId = null;
 
 // Initialize the page
@@ -207,82 +206,78 @@ function loadGuests() {
     `).join('');
 }
 
-// Function to show QR code
 function showQRCode(eventId, guestId) {
     const username = localStorage.getItem('username');
+    console.log('Showing QR code for event:', eventId, 'guest:', guestId);
     const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
     const event = events.find(e => e.id === eventId);
     const guest = event.guests.find(g => g.id === guestId);
 
-    if (guest) {
-        const qrData = JSON.stringify({
-            eventId: eventId,
-            guestId: guestId,
-            eventName: event.name,
-            guestName: guest.name
-        });
+    if (!guest) {
+        console.error('Guest not found');
+        return;
+    }
 
-        // Clear previous QR code
-        const qrContainer = document.getElementById('qrCodeContainer');
-        qrContainer.innerHTML = '';
+    const qrData = JSON.stringify({
+        eventId: eventId,
+        guestId: guestId,
+        guestName: guest.name,
+        guestCount: guest.count
+    });
 
-        // Create QR code using the qrcode-generator library
-        const qr = qrcode(0, 'M');
-        qr.addData(qrData);
-        qr.make();
-        
-        // Create canvas element
-        const canvas = document.createElement('canvas');
-        const size = 200;
-        canvas.width = size;
-        canvas.height = size;
-        
-        // Get canvas context and draw QR code
-        const ctx = canvas.getContext('2d');
-        const cells = qr.modules;
-        const tileW = size / cells.length;
-        const tileH = size / cells.length;
-        
-        // Draw white background
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, size, size);
-        
-        // Draw QR code
-        ctx.fillStyle = '#000000';
-        for (let row = 0; row < cells.length; row++) {
-            for (let col = 0; col < cells.length; col++) {
-                if (cells[row][col]) {
-                    ctx.fillRect(col * tileW, row * tileH, tileW, tileH);
-                }
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    qrCodeContainer.innerHTML = '';
+
+    // Create QR code using the qrcode-generator library
+    const qr = qrcode(0, 'M');
+    qr.addData(qrData);
+    qr.make();
+    
+    // Create canvas element
+    const canvas = document.createElement('canvas');
+    const size = 200;
+    canvas.width = size;
+    canvas.height = size;
+    
+    // Get canvas context and draw QR code
+    const ctx = canvas.getContext('2d');
+    const cells = qr.modules;
+    const tileW = size / cells.length;
+    const tileH = size / cells.length;
+    
+    // Draw white background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    
+    // Draw QR code
+    ctx.fillStyle = '#000000';
+    for (let row = 0; row < cells.length; row++) {
+        for (let col = 0; col < cells.length; col++) {
+            if (cells[row][col]) {
+                ctx.fillRect(col * tileW, row * tileH, tileW, tileH);
             }
         }
-        
-        // Add canvas to container
-        qrContainer.appendChild(canvas);
-
-        // Show modal
-        document.getElementById('qrCodeModal').classList.remove('hidden');
     }
+    
+    // Add canvas to container
+    qrCodeContainer.appendChild(canvas);
+    document.getElementById('qrCodeModal').classList.remove('hidden');
 }
 
-// Function to close QR code modal
 function closeQRCodeModal() {
     document.getElementById('qrCodeModal').classList.add('hidden');
-    const qrContainer = document.getElementById('qrCodeContainer');
-    qrContainer.innerHTML = '';
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    qrCodeContainer.innerHTML = '';
 }
 
-// Function to save QR code
 function saveQRCode() {
-    const qrContainer = document.getElementById('qrCodeContainer');
-    const canvas = qrContainer.querySelector('canvas');
-    
-    if (canvas) {
-        const link = document.createElement('a');
-        link.download = 'guest-qr-code.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    }
+    const canvas = document.querySelector('#qrCodeContainer canvas');
+    if (!canvas) return;
+
+    const link = document.createElement('a');
+    link.download = 'guest-qr-code.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
 }
 
 // Function to remove a guest
