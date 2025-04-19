@@ -141,7 +141,7 @@ function loadGuests() {
     }
 
     guestsList.innerHTML = event.guests.map(guest => `
-        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
             <div>
                 <h3 class="font-semibold">${guest.name}</h3>
                 <p class="text-sm text-gray-500">${guest.count} guest${guest.count > 1 ? 's' : ''}</p>
@@ -150,8 +150,9 @@ function loadGuests() {
                 </p>
             </div>
             <div class="flex space-x-2">
-                <button onclick="showQRCode('${eventId}', '${guest.id}')" class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                    QR
+                <button onclick="showQRCode('${eventId}', '${guest.id}')" 
+                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                    Show QR
                 </button>
             </div>
         </div>
