@@ -57,30 +57,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const events = JSON.parse(localStorage.getItem('events')) || [];
         
         // Find current event and add/edit guest
-        events.forEach(event => {
-            if (event.id === currentEventId) {
-                if (editingGuestId) {
-                    // Update existing guest
-                    const guestIndex = event.guests.findIndex(g => g.id === editingGuestId);
-                    if (guestIndex !== -1) {
-                        event.guests[guestIndex] = {
-                            id: editingGuestId,
-                            name: guestName,
-                            count: guestCount,
-                            checkedIn: false
-                        };
-                    }
-                } else {
-                    // Add new guest
-                    event.guests.push({
-                        id: Date.now().toString(),
+        const eventIndex = events.findIndex(e => e.id === currentEventId);
+        if (eventIndex !== -1) {
+            if (editingGuestId) {
+                // Update existing guest
+                const guestIndex = events[eventIndex].guests.findIndex(g => g.id === editingGuestId);
+                if (guestIndex !== -1) {
+                    events[eventIndex].guests[guestIndex] = {
+                        id: editingGuestId,
                         name: guestName,
                         count: guestCount,
                         checkedIn: false
-                    });
+                    };
                 }
+            } else {
+                // Add new guest
+                if (!events[eventIndex].guests) {
+                    events[eventIndex].guests = [];
+                }
+                events[eventIndex].guests.push({
+                    id: Date.now().toString(),
+                    name: guestName,
+                    count: guestCount,
+                    checkedIn: false
+                });
             }
-        });
+        }
 
         // Save back to localStorage
         localStorage.setItem('events', JSON.stringify(events));
@@ -134,7 +136,7 @@ function loadGuests() {
     const events = JSON.parse(localStorage.getItem('events')) || [];
     const event = events.find(e => e.id === currentEventId);
 
-    if (!event || !event.guests) {
+    if (!event || !event.guests || event.guests.length === 0) {
         guestsList.innerHTML = '<p class="text-gray-500">No guests added yet.</p>';
         return;
     }
