@@ -45,16 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const username = localStorage.getItem('username');
-            console.log('Creating event for username:', username);
-            
             const newEvent = {
                 id: Date.now().toString(),
                 name: eventName,
                 guests: []
             };
-            console.log('New event data:', newEvent);
 
-            fetch(`http://localhost:3000/api/events/${username}`, {
+            fetch(`https://your-deployed-backend-url.com/api/events/${username}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -62,17 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(newEvent)
             })
             .then(response => {
-                console.log('Server response status:', response.status);
                 if (!response.ok) {
-                    return response.json().then(err => {
-                        console.error('Server error:', err);
-                        throw new Error(err.error || 'Failed to create event');
-                    });
+                    throw new Error('Failed to create event');
                 }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Event created successfully:', data);
                 // Clear input and hide modal
                 document.getElementById('eventNameInput').value = '';
                 createEventModal.classList.add('hidden');
@@ -81,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => {
                 console.error('Error creating event:', error);
-                alert(error.message || 'Error creating event. Please try again.');
+                alert('Error creating event. Please try again.');
             });
         };
     }
@@ -97,13 +86,16 @@ function logout() {
     window.location.href = 'login.html';
 }
 
+// API base URL
+const API_BASE_URL = 'https://your-deployed-backend-url.com';
+
 // Function to load all events
 function loadEvents() {
     const eventsList = document.getElementById('eventsList');
     const username = localStorage.getItem('username');
     
     // Fetch events from API
-    fetch(`http://localhost:3000/api/events/${username}`)
+    fetch(`${API_BASE_URL}/api/events/${username}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to load events');
@@ -151,7 +143,7 @@ function deleteEvent(eventId) {
 
     const username = localStorage.getItem('username');
     
-    fetch(`http://localhost:3000/api/events/${username}/${eventId}`, {
+    fetch(`${API_BASE_URL}/api/events/${username}/${eventId}`, {
         method: 'DELETE'
     })
     .then(response => {

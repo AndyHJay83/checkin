@@ -1,12 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const app = express();
 
-// Configure CORS
+// Configure CORS to allow requests from anywhere
 app.use(cors({
-    origin: ['http://localhost:8000', 'http://127.0.0.1:8000'], // Allow requests from your frontend server
+    origin: '*',  // Allow requests from any origin
     methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -14,39 +15,46 @@ app.use(cors({
 
 app.use(bodyParser.json());
 
-// In-memory storage (replace with a database in production)
-const users = {};
+// MongoDB connection
+mongoose.connect('mongodb+srv://andyhaydnjay:sR9ciUZdwMmrCrzy@cluster0.mongodb.net/checkin?retryWrites=true&w=majority', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.error('MongoDB connection error:', err));
+
+// Define schemas
+const userSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    events: [{
+        id: String,
+        name: String,
+        guests: [{
+            id: String,
+            firstName: String,
+            lastName: String,
+            ticketCount: Number,
+            checkedIn: Boolean
+        }]
+    }]
+});
+
+const User = mongoose.model('User', userSchema);
 
 // Create a new event for a user
-app.post('/api/events/:username', (req, res) => {
+app.post('/api/events/:username', async (req, res) => {
     const { username } = req.params;
     const event = req.body;
     
-    console.log('Received event creation request:');
-    console.log('Username:', username);
-    console.log('Event data:', event);
-    
-    if (!username) {
-        console.log('Error: Username is required');
-        return res.status(400).json({ error: 'Username is required' });
-    }
-    
-    if (!event || !event.name) {
-        console.log('Error: Event name is required');
-        return res.status(400).json({ error: 'Event name is required' });
-    }
-    
     try {
-        // Initialize user's events array if it doesn't exist
-        if (!users[username]) {
-            console.log('Initializing new user:', username);
-            users[username] = { events: [] };
+        let user = await User.findOne({ username });
+        
+        if (!user) {
+            user = new User({ username, events: [] });
         }
         
-        // Add the new event
-        console.log('Adding event to user:', username);
-        users[username].events.push(event);
-        console.log('Current events for user:', users[username].events);
+        user.events.push(event);
+        await user.save();
         
         res.json({ success: true, event });
     } catch (error) {
@@ -56,16 +64,12 @@ app.post('/api/events/:username', (req, res) => {
 });
 
 // Get events for a user
-app.get('/api/events/:username', (req, res) => {
+app.get('/api/events/:username', async (req, res) => {
     const { username } = req.params;
     
-    if (!username) {
-        return res.status(400).json({ error: 'Username is required' });
-    }
-    
     try {
-        const events = users[username]?.events || [];
-        res.json(events);
+        const user = await User.findOne({ username });
+        res.json(user?.events || []);
     } catch (error) {
         console.error('Error getting events:', error);
         res.status(500).json({ error: 'Failed to get events' });
@@ -73,18 +77,17 @@ app.get('/api/events/:username', (req, res) => {
 });
 
 // Get a specific event
-app.get('/api/events/:username/:eventId', (req, res) => {
+app.get('/api/events/:username/:eventId', async (req, res) => {
     const { username, eventId } = req.params;
     
-    if (!username || !eventId) {
-        return res.status(400).json({ error: 'Username and event ID are required' });
-    }
-    
     try {
-        const event = users[username]?.events?.find(e => e.id === eventId);
+        const user = await User.findOne({ username });
+        const event = user?.events?.find(e => e.id === eventId);
+        
         if (!event) {
             return res.status(404).json({ error: 'Event not found' });
         }
+        
         res.json(event);
     } catch (error) {
         console.error('Error getting event:', error);
@@ -93,24 +96,18 @@ app.get('/api/events/:username/:eventId', (req, res) => {
 });
 
 // Delete an event
-app.delete('/api/events/:username/:eventId', (req, res) => {
+app.delete('/api/events/:username/:eventId', async (req, res) => {
     const { username, eventId } = req.params;
     
-    if (!username || !eventId) {
-        return res.status(400).json({ error: 'Username and event ID are required' });
-    }
-    
     try {
-        if (!users[username]?.events) {
+        const user = await User.findOne({ username });
+        if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
         
-        const eventIndex = users[username].events.findIndex(e => e.id === eventId);
-        if (eventIndex === -1) {
-            return res.status(404).json({ error: 'Event not found' });
-        }
+        user.events = user.events.filter(e => e.id !== eventId);
+        await user.save();
         
-        users[username].events.splice(eventIndex, 1);
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting event:', error);
@@ -119,20 +116,17 @@ app.delete('/api/events/:username/:eventId', (req, res) => {
 });
 
 // Add a guest to an event
-app.post('/api/events/:username/:eventId/guests', (req, res) => {
+app.post('/api/events/:username/:eventId/guests', async (req, res) => {
     const { username, eventId } = req.params;
     const guest = req.body;
     
-    if (!username || !eventId) {
-        return res.status(400).json({ error: 'Username and event ID are required' });
-    }
-    
-    if (!guest || !guest.firstName || !guest.lastName) {
-        return res.status(400).json({ error: 'Guest first name and last name are required' });
-    }
-    
     try {
-        const event = users[username]?.events?.find(e => e.id === eventId);
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        const event = user.events.find(e => e.id === eventId);
         if (!event) {
             return res.status(404).json({ error: 'Event not found' });
         }
@@ -142,6 +136,8 @@ app.post('/api/events/:username/:eventId/guests', (req, res) => {
         }
         
         event.guests.push(guest);
+        await user.save();
+        
         res.json({ success: true, guest });
     } catch (error) {
         console.error('Error adding guest:', error);
