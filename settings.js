@@ -88,15 +88,59 @@ function loadEvents() {
     }
 
     eventsList.innerHTML = events.map(event => `
-        <div class="bg-white p-4 rounded-md shadow">
-            <h3 class="font-semibold">${event.name}</h3>
-            <p class="text-sm text-gray-600">${event.guests.length} guest(s)</p>
-            <button onclick="window.location.href='event.html?id=${event.id}'" 
-                    class="mt-2 text-blue-500 hover:text-blue-700">
-                Manage Guests
-            </button>
+        <div class="bg-white p-4 rounded-md shadow mb-4">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="font-semibold">${event.name}</h3>
+                    <p class="text-sm text-gray-600">${event.guests.length} guest(s)</p>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="window.location.href='event.html?id=${event.id}'" 
+                            class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
+                        Manage Guests
+                    </button>
+                    <button onclick="deleteEvent('${event.id}')" 
+                            class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm">
+                        Delete Event
+                    </button>
+                </div>
+            </div>
         </div>
     `).join('');
+}
+
+// Function to delete an event
+function deleteEvent(eventId) {
+    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const username = localStorage.getItem('username');
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+        
+        // Filter out the event to be deleted
+        const updatedEvents = events.filter(event => event.id !== eventId);
+        
+        // Save back to localStorage
+        localStorage.setItem(`events_${username}`, JSON.stringify(updatedEvents));
+        
+        // Refresh events list
+        loadEvents();
+        
+        // If the deleted event was the current event, clear the current event ID
+        if (currentEventId === eventId) {
+            currentEventId = null;
+            const guestForm = document.getElementById('guestForm');
+            if (guestForm) {
+                guestForm.classList.add('hidden');
+            }
+            loadGuests();
+        }
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        alert('Error deleting event. Please try again.');
+    }
 }
 
 // Handle add guest button click
