@@ -3,7 +3,15 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const app = express();
-app.use(cors());
+
+// Configure CORS
+app.use(cors({
+    origin: ['http://localhost:8000', 'http://127.0.0.1:8000'], // Allow requests from your frontend server
+    methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
+
 app.use(bodyParser.json());
 
 // In-memory storage (replace with a database in production)
