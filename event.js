@@ -146,13 +146,13 @@ function loadGuests() {
                 <span class="font-medium">${guest.name}</span>
                 <span class="text-sm text-gray-600 ml-2">(${guest.count} guest${guest.count > 1 ? 's' : ''})</span>
             </div>
-            <div class="space-x-2">
+            <div class="flex space-x-2">
                 <button onclick="editGuest('${guest.id}')" 
-                        class="text-blue-500 hover:text-blue-700">
+                        class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                     Edit
                 </button>
                 <button onclick="removeGuest('${guest.id}')" 
-                        class="text-red-500 hover:text-red-700">
+                        class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600">
                     Remove
                 </button>
             </div>
