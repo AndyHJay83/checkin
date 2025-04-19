@@ -174,7 +174,7 @@ function loadGuests() {
                 </p>
             </div>
             <div class="flex space-x-2">
-                <button onclick="showQRCode('${currentEventId}', '${guest.id}')" 
+                <button onclick="showQRCode(${JSON.stringify(guest).replace(/"/g, '&quot;')})" 
                         class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                     Show QR
                 </button>
@@ -223,44 +223,39 @@ function removeGuest(guestId) {
 }
 
 // Function to show QR code
-function showQRCode(eventId, guestId) {
-    const username = localStorage.getItem('username');
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    const event = events.find(e => e.id === eventId);
-    const guest = event.guests.find(g => g.id === guestId);
-
-    if (guest) {
-        const qrData = JSON.stringify({
-            eventId: eventId,
-            guestId: guestId,
-            guestName: guest.name
-        });
-
-        const qrCodeContainer = document.getElementById('qrCodeContainer');
-        qrCodeContainer.innerHTML = '';
-        
-        // Create new QR code
-        new QRCode(qrCodeContainer, {
-            text: qrData,
-            width: 200,
-            height: 200,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
-        });
-
-        document.getElementById('qrCodeModal').classList.remove('hidden');
-    }
+function showQRCode(guestData) {
+    const modal = document.getElementById('qrCodeModal');
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    
+    // Clear previous QR code
+    qrCodeContainer.innerHTML = '';
+    
+    // Create QR code with guest data
+    new QRCode(qrCodeContainer, {
+        text: JSON.stringify(guestData),
+        width: 256,
+        height: 256,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    // Show modal
+    modal.classList.remove('hidden');
 }
 
 // Function to close QR code modal
 function closeQRCodeModal() {
-    document.getElementById('qrCodeModal').classList.add('hidden');
+    const modal = document.getElementById('qrCodeModal');
+    modal.classList.add('hidden');
 }
 
 // Function to save QR code
 function saveQRCode() {
-    const canvas = document.querySelector('#qrCodeContainer canvas');
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    const canvas = qrCodeContainer.querySelector('canvas');
+    
+    // Create a temporary link to download the QR code
     const link = document.createElement('a');
     link.download = 'guest-qr-code.png';
     link.href = canvas.toDataURL('image/png');
