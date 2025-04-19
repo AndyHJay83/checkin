@@ -1,75 +1,45 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
+const PORT = 3000;
 
-// Configure CORS to allow requests from anywhere
-app.use(cors({
-    origin: '*',  // Allow requests from any origin
-    methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-}));
+// Enable CORS for all routes
+app.use(cors());
+app.use(express.json());
 
-app.use(bodyParser.json());
+// Ensure the data directory exists
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir);
+}
 
-// MongoDB connection
-mongoose.connect('mongodb+srv://andyhaydnjay:sR9ciUZdwMmrCrzy@cluster0.mongodb.net/checkin?retryWrites=true&w=majority', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+// Helper function to get user data file path
+const getUserDataPath = (username) => path.join(dataDir, `${username}.json`);
 
-// Define schemas
-const userSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    events: [{
-        id: String,
-        name: String,
-        guests: [{
-            id: String,
-            firstName: String,
-            lastName: String,
-            ticketCount: Number,
-            checkedIn: Boolean
-        }]
-    }]
-});
-
-const User = mongoose.model('User', userSchema);
-
-// Create a new event for a user
-app.post('/api/events/:username', async (req, res) => {
-    const { username } = req.params;
-    const event = req.body;
-    
-    try {
-        let user = await User.findOne({ username });
-        
-        if (!user) {
-            user = new User({ username, events: [] });
-        }
-        
-        user.events.push(event);
-        await user.save();
-        
-        res.json({ success: true, event });
-    } catch (error) {
-        console.error('Error creating event:', error);
-        res.status(500).json({ error: 'Failed to create event' });
+// Helper function to read user data
+const readUserData = (username) => {
+    const filePath = getUserDataPath(username);
+    if (fs.existsSync(filePath)) {
+        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
     }
-});
+    return { events: [] };
+};
 
-// Get events for a user
-app.get('/api/events/:username', async (req, res) => {
-    const { username } = req.params;
-    
+// Helper function to write user data
+const writeUserData = (username, data) => {
+    const filePath = getUserDataPath(username);
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+};
+
+// Get all events for a user
+app.get('/api/events/:username', (req, res) => {
     try {
-        const user = await User.findOne({ username });
-        res.json(user?.events || []);
+        const { username } = req.params;
+        const userData = readUserData(username);
+        res.json(userData.events);
     } catch (error) {
         console.error('Error getting events:', error);
         res.status(500).json({ error: 'Failed to get events' });
@@ -77,75 +47,85 @@ app.get('/api/events/:username', async (req, res) => {
 });
 
 // Get a specific event
-app.get('/api/events/:username/:eventId', async (req, res) => {
-    const { username, eventId } = req.params;
-    
+app.get('/api/events/:username/:eventId', (req, res) => {
     try {
-        const user = await User.findOne({ username });
-        const event = user?.events?.find(e => e.id === eventId);
-        
-        if (!event) {
-            return res.status(404).json({ error: 'Event not found' });
+        const { username, eventId } = req.params;
+        const userData = readUserData(username);
+        const event = userData.events.find(e => e.id === eventId);
+        if (event) {
+            res.json(event);
+        } else {
+            res.status(404).json({ error: 'Event not found' });
         }
-        
-        res.json(event);
     } catch (error) {
         console.error('Error getting event:', error);
         res.status(500).json({ error: 'Failed to get event' });
     }
 });
 
-// Delete an event
-app.delete('/api/events/:username/:eventId', async (req, res) => {
-    const { username, eventId } = req.params;
-    
+// Create a new event
+app.post('/api/events/:username', (req, res) => {
     try {
-        const user = await User.findOne({ username });
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+        const { username } = req.params;
+        const eventData = req.body;
+        console.log('Received event creation request:');
+        console.log('Username:', username);
+        console.log('Event data:', eventData);
+
+        const userData = readUserData(username);
+        userData.events.push(eventData);
+        writeUserData(username, userData);
+
+        console.log('Event created successfully');
+        res.json(eventData);
+    } catch (error) {
+        console.error('Error creating event:', error);
+        res.status(500).json({ error: 'Failed to create event' });
+    }
+});
+
+// Update an event
+app.put('/api/events/:username/:eventId', (req, res) => {
+    try {
+        const { username, eventId } = req.params;
+        const eventData = req.body;
+        const userData = readUserData(username);
+        const eventIndex = userData.events.findIndex(e => e.id === eventId);
+        
+        if (eventIndex !== -1) {
+            userData.events[eventIndex] = { ...userData.events[eventIndex], ...eventData };
+            writeUserData(username, userData);
+            res.json(userData.events[eventIndex]);
+        } else {
+            res.status(404).json({ error: 'Event not found' });
         }
+    } catch (error) {
+        console.error('Error updating event:', error);
+        res.status(500).json({ error: 'Failed to update event' });
+    }
+});
+
+// Delete an event
+app.delete('/api/events/:username/:eventId', (req, res) => {
+    try {
+        const { username, eventId } = req.params;
+        const userData = readUserData(username);
+        const eventIndex = userData.events.findIndex(e => e.id === eventId);
         
-        user.events = user.events.filter(e => e.id !== eventId);
-        await user.save();
-        
-        res.json({ success: true });
+        if (eventIndex !== -1) {
+            userData.events.splice(eventIndex, 1);
+            writeUserData(username, userData);
+            res.json({ message: 'Event deleted successfully' });
+        } else {
+            res.status(404).json({ error: 'Event not found' });
+        }
     } catch (error) {
         console.error('Error deleting event:', error);
         res.status(500).json({ error: 'Failed to delete event' });
     }
 });
 
-// Add a guest to an event
-app.post('/api/events/:username/:eventId/guests', async (req, res) => {
-    const { username, eventId } = req.params;
-    const guest = req.body;
-    
-    try {
-        const user = await User.findOne({ username });
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        
-        const event = user.events.find(e => e.id === eventId);
-        if (!event) {
-            return res.status(404).json({ error: 'Event not found' });
-        }
-        
-        if (!event.guests) {
-            event.guests = [];
-        }
-        
-        event.guests.push(guest);
-        await user.save();
-        
-        res.json({ success: true, guest });
-    } catch (error) {
-        console.error('Error adding guest:', error);
-        res.status(500).json({ error: 'Failed to add guest' });
-    }
-});
-
-const PORT = process.env.PORT || 3000;
+// Start the server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 }); 
