@@ -1,7 +1,7 @@
 let html5QrcodeScanner = null;
 
 // Function to start scanning
-function startScanning() {
+async function startScanning() {
     const reader = document.getElementById('reader');
     const startButton = document.getElementById('startScanning');
     const stopButton = document.getElementById('stopScanning');
@@ -11,34 +11,50 @@ function startScanning() {
     stopButton.classList.remove('hidden');
     reader.classList.remove('hidden');
     
-    // Initialize the scanner with back camera
-    html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader",
-        {
-            fps: 10,
-            qrbox: 250,
-            aspectRatio: 1.0,
-            videoConstraints: {
-                facingMode: "environment"
-            }
-        },
-        false
-    );
-    
-    // Start scanning
-    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    try {
+        // Initialize the scanner with back camera
+        html5QrcodeScanner = new Html5Qrcode("reader");
+        
+        // Get available cameras
+        const cameras = await Html5Qrcode.getCameras();
+        if (cameras && cameras.length > 0) {
+            // Find the back camera
+            const backCamera = cameras.find(camera => 
+                camera.label.toLowerCase().includes('back') || 
+                camera.label.toLowerCase().includes('rear')
+            ) || cameras[0]; // Fallback to first camera if no back camera found
+            
+            // Start scanning with the selected camera
+            await html5QrcodeScanner.start(
+                { deviceId: { exact: backCamera.id } },
+                { fps: 10, qrbox: 250 },
+                onScanSuccess,
+                onScanFailure
+            );
+        } else {
+            console.error('No cameras found');
+            stopScanning();
+        }
+    } catch (error) {
+        console.error('Error starting scanner:', error);
+        stopScanning();
+    }
 }
 
 // Function to stop scanning
-function stopScanning() {
+async function stopScanning() {
     const reader = document.getElementById('reader');
     const startButton = document.getElementById('startScanning');
     const stopButton = document.getElementById('stopScanning');
     
     // Stop the scanner
     if (html5QrcodeScanner) {
-        html5QrcodeScanner.clear();
-        html5QrcodeScanner = null;
+        try {
+            await html5QrcodeScanner.stop();
+            html5QrcodeScanner = null;
+        } catch (error) {
+            console.error('Error stopping scanner:', error);
+        }
     }
     
     // Show the start button and hide the scanner and stop button
