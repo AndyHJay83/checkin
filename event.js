@@ -36,9 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle guest addition
     confirmAddGuest.addEventListener('click', () => {
         const guestName = document.getElementById('guestNameInput').value.trim();
+        const guestCount = parseInt(document.getElementById('guestCountInput').value) || 1;
         
         if (!guestName) {
             alert('Please enter a guest name');
+            return;
+        }
+
+        if (guestCount < 1) {
+            alert('Please enter a valid number of guests (minimum 1)');
             return;
         }
 
@@ -51,7 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.id === currentEventId) {
                 event.guests.push({
                     id: Date.now().toString(),
-                    name: guestName
+                    name: guestName,
+                    count: guestCount
                 });
             }
         });
@@ -61,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Clear input and hide modal
         document.getElementById('guestNameInput').value = '';
+        document.getElementById('guestCountInput').value = '1';
         addGuestModal.classList.add('hidden');
 
         // Refresh guests list
@@ -99,7 +107,10 @@ function loadGuests() {
 
     guestsList.innerHTML = currentEvent.guests.map(guest => `
         <div class="bg-white p-4 rounded-md shadow flex justify-between items-center">
-            <span>${guest.name}</span>
+            <div>
+                <span class="font-medium">${guest.name}</span>
+                <span class="text-sm text-gray-600 ml-2">(${guest.count} guest${guest.count > 1 ? 's' : ''})</span>
+            </div>
             <button onclick="removeGuest('${guest.id}')" 
                     class="text-red-500 hover:text-red-700">
                 Remove
