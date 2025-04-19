@@ -206,20 +206,40 @@ function showQRCode(eventId, guestId) {
     const qrCodeContainer = document.getElementById('qrCodeContainer');
     qrCodeContainer.innerHTML = '';
 
-    QRCode.toCanvas(qrCodeContainer, qrData, {
-        width: 200,
-        margin: 2,
-        color: {
-            dark: '#000000',
-            light: '#ffffff'
+    // Create QR code using the new library
+    const qr = qrcode(0, 'M');
+    qr.addData(qrData);
+    qr.make();
+    
+    // Create canvas element
+    const canvas = document.createElement('canvas');
+    const size = 200;
+    canvas.width = size;
+    canvas.height = size;
+    
+    // Get canvas context and draw QR code
+    const ctx = canvas.getContext('2d');
+    const cells = qr.modules;
+    const tileW = size / cells.length;
+    const tileH = size / cells.length;
+    
+    // Draw white background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    
+    // Draw QR code
+    ctx.fillStyle = '#000000';
+    for (let row = 0; row < cells.length; row++) {
+        for (let col = 0; col < cells.length; col++) {
+            if (cells[row][col]) {
+                ctx.fillRect(col * tileW, row * tileH, tileW, tileH);
+            }
         }
-    }, function (error) {
-        if (error) {
-            console.error('QR code generation error:', error);
-            return;
-        }
-        document.getElementById('qrCodeModal').classList.remove('hidden');
-    });
+    }
+    
+    // Add canvas to container
+    qrCodeContainer.appendChild(canvas);
+    document.getElementById('qrCodeModal').classList.remove('hidden');
 }
 
 function closeQRCodeModal() {

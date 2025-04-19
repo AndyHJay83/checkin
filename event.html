@@ -3,77 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Event</title>
+    <title>Event Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
-        <div class="flex justify-between items-center mb-6">
-            <h1 id="eventTitle" class="text-2xl font-bold">Event Name</h1>
-            <button onclick="window.location.href='settings.html'" 
-                    class="text-gray-600 hover:text-gray-800">
-                ← Back to Events
-            </button>
-        </div>
-
-        <!-- Add Guest Button -->
-        <button id="addGuestBtn" 
-                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mb-6">
-            Add Guest
-        </button>
-
-        <!-- Add Guest Modal -->
-        <div id="addGuestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden">
-            <div class="flex items-center justify-center min-h-screen">
-                <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-                    <h2 class="text-xl font-semibold mb-4">Add Guest</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="guestNameInput" class="block text-sm font-medium text-gray-700">Guest Name</label>
-                            <input type="text" 
-                                   id="guestNameInput" 
-                                   placeholder="Enter guest name" 
-                                   class="w-full p-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label for="guestCountInput" class="block text-sm font-medium text-gray-700">Number of Guests</label>
-                            <input type="number" 
-                                   id="guestCountInput" 
-                                   min="1" 
-                                   value="1"
-                                   class="w-full p-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-2 mt-4">
-                        <button id="cancelAddGuest" 
-                                class="px-4 py-2 text-gray-600 hover:text-gray-800">
-                            Cancel
-                        </button>
-                        <button id="confirmAddGuest" 
-                                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-                            Add
-                        </button>
-                    </div>
-                </div>
+        <div class="flex justify-between items-center mb-8">
+            <h1 id="eventTitle" class="text-3xl font-bold text-gray-800"></h1>
+            <div class="flex space-x-4">
+                <a href="settings.html" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Back to Events</a>
+                <button id="addGuestBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Add Guest</button>
             </div>
         </div>
 
-        <!-- Guests List -->
         <div id="guestsList" class="space-y-4">
-            <!-- Guests will be listed here -->
+            <!-- Guest list will be populated here -->
+        </div>
+    </div>
+
+    <!-- Add Guest Modal -->
+    <div id="addGuestModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+                <h2 class="text-2xl font-bold mb-4">Add Guest</h2>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="guestNameInput">
+                        Guest Name
+                    </label>
+                    <input type="text" id="guestNameInput" class="w-full px-3 py-2 border rounded-md">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="guestCountInput">
+                        Number of Guests
+                    </label>
+                    <input type="number" id="guestCountInput" value="1" min="1" class="w-full px-3 py-2 border rounded-md">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button id="cancelAddGuest" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Cancel</button>
+                    <button id="confirmAddGuest" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Add</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- QR Code Modal -->
-    <div id="qrCodeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden">
+    <div id="qrCodeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
         <div class="flex items-center justify-center min-h-screen">
-            <div class="bg-white p-6 rounded-lg shadow-lg">
-                <h2 class="text-xl font-bold mb-4">Guest QR Code</h2>
+            <div class="bg-white p-8 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4">Guest QR Code</h2>
                 <div id="qrCodeContainer" class="mb-4"></div>
                 <div class="flex justify-end space-x-2">
                     <button onclick="closeQRCodeModal()" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Close</button>
-                    <button onclick="saveQRCode()" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Save QR Code</button>
+                    <button onclick="saveQRCode()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Save QR Code</button>
                 </div>
             </div>
         </div>
