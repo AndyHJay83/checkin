@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 guests: []
             };
 
-            fetch(`https://your-deployed-backend-url.com/api/events/${username}`, {
+            fetch(`${API_CONFIG.baseUrl}/events/${username}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -86,8 +86,11 @@ function logout() {
     window.location.href = 'login.html';
 }
 
-// API base URL
-const API_BASE_URL = 'https://your-deployed-backend-url.com';
+// API Configuration
+const API_CONFIG = {
+    // For GitHub Pages deployment
+    baseUrl: '/api'
+};
 
 // Function to load all events
 function loadEvents() {
@@ -95,7 +98,7 @@ function loadEvents() {
     const username = localStorage.getItem('username');
     
     // Fetch events from API
-    fetch(`${API_BASE_URL}/api/events/${username}`)
+    fetch(`${API_CONFIG.baseUrl}/events/${username}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to load events');
@@ -143,7 +146,7 @@ function deleteEvent(eventId) {
 
     const username = localStorage.getItem('username');
     
-    fetch(`${API_BASE_URL}/api/events/${username}/${eventId}`, {
+    fetch(`${API_CONFIG.baseUrl}/events/${username}/${eventId}`, {
         method: 'DELETE'
     })
     .then(response => {

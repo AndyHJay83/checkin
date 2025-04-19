@@ -1,5 +1,5 @@
 let html5QrcodeScanner = null;
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://andyjay.github.io/checkin/api';
 
 // Function to start scanning
 async function startScanning() {

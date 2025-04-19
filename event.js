@@ -2,8 +2,8 @@
 let currentEventId = null;
 let editingGuestId = null;
 
-// API base URL
-const API_BASE_URL = 'https://your-deployed-backend-url.com';
+// API Configuration
+const API_URL = 'https://andyjay.github.io/checkin/api';
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
@@ -128,7 +128,7 @@ function loadEventDetails() {
         return;
     }
 
-    fetch(`${API_BASE_URL}/api/events/${username}/${eventId}`)
+    fetch(`${API_URL}/events/${username}/${eventId}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to load event details');
@@ -154,7 +154,7 @@ function loadGuests() {
     const urlParams = new URLSearchParams(window.location.search);
     const eventId = urlParams.get('id');
 
-    fetch(`${API_BASE_URL}/api/events/${username}/${eventId}`)
+    fetch(`${API_URL}/events/${username}/${eventId}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to load guests');
@@ -316,7 +316,7 @@ function handleAddGuest() {
         checkedIn: false
     };
 
-    fetch(`${API_BASE_URL}/api/events/${username}/${eventId}/guests`, {
+    fetch(`${API_URL}/events/${username}/${eventId}/guests`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

@@ -1,15 +1,14 @@
 {
   "name": "checkin-backend",
   "version": "1.0.0",
-  "description": "Backend server for the checkin application",
+  "description": "Backend for the Checkin application",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "cp server.js index.js && cp package.json package.json.bak && echo '{\"main\":\"index.js\"}' > package.json"
   },
   "dependencies": {
-    "body-parser": "^1.19.0",
-    "cors": "^2.8.5",
-    "express": "^4.17.1",
-    "mongoose": "^6.13.8"
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
   }
 }
