@@ -148,6 +148,11 @@ function loadGuests() {
     console.log('Loading guests for username:', username);
     
     const guestsList = document.getElementById('guestsList');
+    if (!guestsList) {
+        console.error('guestsList element not found');
+        return;
+    }
+    
     const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
     console.log('All events:', events);
     
