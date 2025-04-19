@@ -225,15 +225,39 @@ function showQRCode(eventId, guestId) {
         const qrContainer = document.getElementById('qrCodeContainer');
         qrContainer.innerHTML = '';
 
-        // Create new QR code
-        const qr = new QRCode(qrContainer, {
-            text: qrData,
-            width: 256,
-            height: 256,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
+        // Create QR code using the qrcode-generator library
+        const qr = qrcode(0, 'M');
+        qr.addData(qrData);
+        qr.make();
+        
+        // Create canvas element
+        const canvas = document.createElement('canvas');
+        const size = 200;
+        canvas.width = size;
+        canvas.height = size;
+        
+        // Get canvas context and draw QR code
+        const ctx = canvas.getContext('2d');
+        const cells = qr.modules;
+        const tileW = size / cells.length;
+        const tileH = size / cells.length;
+        
+        // Draw white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+        
+        // Draw QR code
+        ctx.fillStyle = '#000000';
+        for (let row = 0; row < cells.length; row++) {
+            for (let col = 0; col < cells.length; col++) {
+                if (cells[row][col]) {
+                    ctx.fillRect(col * tileW, row * tileH, tileW, tileH);
+                }
+            }
+        }
+        
+        // Add canvas to container
+        qrContainer.appendChild(canvas);
 
         // Show modal
         document.getElementById('qrCodeModal').classList.remove('hidden');
