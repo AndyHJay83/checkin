@@ -1,14 +1,27 @@
 let currentEventId = null;
 
-// Initialize the page
+// Check authentication on page load
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Page loaded');
-    
-    // Initialize localStorage with empty events array if it doesn't exist
-    if (!localStorage.getItem('events')) {
-        localStorage.setItem('events', JSON.stringify([]));
+    // Check if user is logged in
+    if (!localStorage.getItem('isLoggedIn')) {
+        window.location.href = 'login.html';
+        return;
     }
-    
+
+    // Add logout button handler
+    const logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('username');
+        window.location.href = 'login.html';
+    });
+
+    // Initialize localStorage with empty events array if it doesn't exist
+    const username = localStorage.getItem('username');
+    if (!localStorage.getItem(`events_${username}`)) {
+        localStorage.setItem(`events_${username}`, JSON.stringify([]));
+    }
+
     // Add event listeners
     const createEventBtn = document.getElementById('createEventBtn');
     const cancelCreateEvent = document.getElementById('cancelCreateEvent');
@@ -42,9 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // Get existing events and add new event
-        const events = JSON.parse(localStorage.getItem('events') || '[]');
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
         events.push(newEvent);
-        localStorage.setItem('events', JSON.stringify(events));
+        localStorage.setItem(`events_${username}`, JSON.stringify(events));
 
         // Clear input and hide modal
         document.getElementById('eventNameInput').value = '';
@@ -79,7 +92,8 @@ function handleCreateEvent() {
     
     try {
         // Get existing events
-        const events = JSON.parse(localStorage.getItem('events') || '[]');
+        const username = localStorage.getItem('username');
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
         
         // Create new event
         const newEvent = {
@@ -92,7 +106,7 @@ function handleCreateEvent() {
         events.push(newEvent);
         
         // Save back to localStorage
-        localStorage.setItem('events', JSON.stringify(events));
+        localStorage.setItem(`events_${username}`, JSON.stringify(events));
         
         // Clear input
         eventNameInput.value = '';
@@ -130,7 +144,8 @@ function handleAddGuest() {
     }
     
     try {
-        const events = JSON.parse(localStorage.getItem('events') || '[]');
+        const username = localStorage.getItem('username');
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
         const newGuest = {
             id: Date.now().toString(),
             firstName,
@@ -148,7 +163,7 @@ function handleAddGuest() {
         });
         
         // Save back to localStorage
-        localStorage.setItem('events', JSON.stringify(events));
+        localStorage.setItem(`events_${username}`, JSON.stringify(events));
         
         // Clear form
         document.getElementById('firstName').value = '';
@@ -166,7 +181,8 @@ function handleAddGuest() {
 // Function to load all events
 function loadEvents() {
     const eventsList = document.getElementById('eventsList');
-    const events = JSON.parse(localStorage.getItem('events') || '[]');
+    const username = localStorage.getItem('username');
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
 
     if (events.length === 0) {
         eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
@@ -207,7 +223,8 @@ function loadGuests() {
     }
     
     try {
-        const events = JSON.parse(localStorage.getItem('events') || '[]');
+        const username = localStorage.getItem('username');
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
         const currentEvent = events.find(event => event.id === currentEventId);
         
         if (!currentEvent) {

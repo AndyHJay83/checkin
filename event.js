@@ -2,6 +2,12 @@ let currentEventId = null;
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
+    // Check if user is logged in
+    if (!localStorage.getItem('isLoggedIn')) {
+        window.location.href = 'login.html';
+        return;
+    }
+
     // Get event ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     currentEventId = urlParams.get('id');
@@ -37,7 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Get events from localStorage
-        const events = JSON.parse(localStorage.getItem('events') || '[]');
+        const username = localStorage.getItem('username');
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
         
         // Find current event and add guest
         events.forEach(event => {
@@ -50,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Save back to localStorage
-        localStorage.setItem('events', JSON.stringify(events));
+        localStorage.setItem(`events_${username}`, JSON.stringify(events));
 
         // Clear input and hide modal
         document.getElementById('guestNameInput').value = '';
@@ -67,7 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Function to load event details
 function loadEventDetails() {
-    const events = JSON.parse(localStorage.getItem('events') || '[]');
+    const username = localStorage.getItem('username');
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
     const currentEvent = events.find(event => event.id === currentEventId);
 
     if (currentEvent) {
@@ -80,7 +88,8 @@ function loadEventDetails() {
 // Function to load guests
 function loadGuests() {
     const guestsList = document.getElementById('guestsList');
-    const events = JSON.parse(localStorage.getItem('events') || '[]');
+    const username = localStorage.getItem('username');
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
     const currentEvent = events.find(event => event.id === currentEventId);
 
     if (!currentEvent || currentEvent.guests.length === 0) {
@@ -101,7 +110,8 @@ function loadGuests() {
 
 // Function to remove a guest
 function removeGuest(guestId) {
-    const events = JSON.parse(localStorage.getItem('events') || '[]');
+    const username = localStorage.getItem('username');
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
     
     events.forEach(event => {
         if (event.id === currentEventId) {
@@ -109,6 +119,6 @@ function removeGuest(guestId) {
         }
     });
 
-    localStorage.setItem('events', JSON.stringify(events));
+    localStorage.setItem(`events_${username}`, JSON.stringify(events));
     loadGuests();
 } 
