@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Settings</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-gray-600 hover:text-gray-900">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                    </a>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">Event Settings</span>
+                </div>
+                <div class="flex items-center">
+                    <!-- Empty div for alignment -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Events Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">Events</h2>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="newEventName" placeholder="New event name" class="flex-1 p-2 border rounded-md">
+                    <button onclick="createEvent()" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                        Create Event
+                    </button>
+                </div>
+                <div id="eventsList" class="space-y-2">
+                    <!-- Events will be listed here -->
+                </div>
+            </div>
+
+            <!-- Guests Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">Guests</h2>
+                <div id="guestForm" class="space-y-4 mb-4 hidden">
+                    <input type="text" id="firstName" placeholder="First Name" class="w-full p-2 border rounded-md">
+                    <input type="text" id="lastName" placeholder="Last Name" class="w-full p-2 border rounded-md">
+                    <input type="number" id="ticketCount" placeholder="Number of Tickets" min="1" class="w-full p-2 border rounded-md">
+                    <button onclick="addGuest()" class="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
+                        Add Guest
+                    </button>
+                </div>
+                <div id="guestsList" class="space-y-4">
+                    <!-- Guests will be listed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html> 

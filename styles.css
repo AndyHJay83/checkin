@@ -1,0 +1,23 @@
+/* Additional styles can be added here */
+#reader {
+    min-height: 300px;
+}
+
+#reader video {
+    width: 100% !important;
+}
+
+#reader img {
+    display: none;
+}
+
+/* Modal styles */
+#guestModal {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* QR code styles */
+canvas {
+    max-width: 100%;
+    height: auto;
+} 
