@@ -226,7 +226,7 @@ function showQRCode(eventId, guestId) {
         qrContainer.innerHTML = '';
 
         // Create new QR code
-        new QRCode(qrContainer, {
+        const qr = new QRCode(qrContainer, {
             text: qrData,
             width: 256,
             height: 256,
@@ -243,6 +243,8 @@ function showQRCode(eventId, guestId) {
 // Function to close QR code modal
 function closeQRCodeModal() {
     document.getElementById('qrCodeModal').classList.add('hidden');
+    const qrContainer = document.getElementById('qrCodeContainer');
+    qrContainer.innerHTML = '';
 }
 
 // Function to save QR code
