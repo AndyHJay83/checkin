@@ -8,28 +8,67 @@ document.addEventListener('DOMContentLoaded', () => {
 // Function to create a new event
 function createEvent() {
     const eventName = document.getElementById('newEventName').value.trim();
+    console.log('Creating event with name:', eventName);
+    
     if (!eventName) {
         alert('Please enter an event name');
         return;
     }
 
-    const events = JSON.parse(localStorage.getItem('events') || '[]');
+    // Get existing events or initialize empty array
+    let events = [];
+    try {
+        const storedEvents = localStorage.getItem('events');
+        console.log('Stored events:', storedEvents);
+        events = storedEvents ? JSON.parse(storedEvents) : [];
+    } catch (error) {
+        console.error('Error reading events from localStorage:', error);
+        events = [];
+    }
+
+    // Create new event
     const newEvent = {
         id: Date.now().toString(),
         name: eventName,
         guests: []
     };
+    console.log('New event created:', newEvent);
 
+    // Add new event to array
     events.push(newEvent);
-    localStorage.setItem('events', JSON.stringify(events));
+    console.log('Updated events array:', events);
+
+    // Save to localStorage
+    try {
+        localStorage.setItem('events', JSON.stringify(events));
+        console.log('Events saved to localStorage');
+    } catch (error) {
+        console.error('Error saving events to localStorage:', error);
+        alert('Error saving event. Please try again.');
+        return;
+    }
+
+    // Clear input and refresh display
     document.getElementById('newEventName').value = '';
     loadEvents();
+    
+    // Select the newly created event
+    selectEvent(newEvent.id);
 }
 
 // Function to load all events
 function loadEvents() {
     const eventsList = document.getElementById('eventsList');
-    const events = JSON.parse(localStorage.getItem('events') || '[]');
+    let events = [];
+    
+    try {
+        const storedEvents = localStorage.getItem('events');
+        events = storedEvents ? JSON.parse(storedEvents) : [];
+        console.log('Loading events:', events);
+    } catch (error) {
+        console.error('Error loading events:', error);
+        events = [];
+    }
 
     if (events.length === 0) {
         eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
@@ -47,6 +86,7 @@ function loadEvents() {
 
 // Function to select an event
 function selectEvent(eventId) {
+    console.log('Selecting event:', eventId);
     currentEventId = eventId;
     document.getElementById('guestForm').classList.remove('hidden');
     loadGuests();
