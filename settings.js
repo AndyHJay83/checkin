@@ -10,11 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add logout button handler
     const logoutBtn = document.getElementById('logoutBtn');
-    logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('username');
-        window.location.href = 'login.html';
-    });
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('username');
+            window.location.href = 'login.html';
+        });
+    }
 
     // Initialize localStorage with empty events array if it doesn't exist
     const username = localStorage.getItem('username');
@@ -29,43 +31,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const createEventModal = document.getElementById('createEventModal');
     
     // Show create event modal
-    createEventBtn.addEventListener('click', () => {
-        createEventModal.classList.remove('hidden');
-    });
+    if (createEventBtn) {
+        createEventBtn.addEventListener('click', () => {
+            createEventModal.classList.remove('hidden');
+        });
+    }
 
     // Hide create event modal
-    cancelCreateEvent.addEventListener('click', () => {
-        createEventModal.classList.add('hidden');
-    });
+    if (cancelCreateEvent) {
+        cancelCreateEvent.addEventListener('click', () => {
+            createEventModal.classList.add('hidden');
+        });
+    }
 
     // Handle event creation
-    confirmCreateEvent.addEventListener('click', () => {
-        const eventName = document.getElementById('eventNameInput').value.trim();
-        
-        if (!eventName) {
-            alert('Please enter an event name');
-            return;
-        }
+    if (confirmCreateEvent) {
+        confirmCreateEvent.addEventListener('click', () => {
+            const eventName = document.getElementById('eventNameInput').value.trim();
+            
+            if (!eventName) {
+                alert('Please enter an event name');
+                return;
+            }
 
-        // Create new event
-        const newEvent = {
-            id: Date.now().toString(),
-            name: eventName,
-            guests: []
-        };
+            // Create new event
+            const newEvent = {
+                id: Date.now().toString(),
+                name: eventName,
+                guests: []
+            };
 
-        // Get existing events and add new event
-        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-        events.push(newEvent);
-        localStorage.setItem(`events_${username}`, JSON.stringify(events));
+            // Get existing events and add new event
+            const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+            events.push(newEvent);
+            localStorage.setItem(`events_${username}`, JSON.stringify(events));
 
-        // Clear input and hide modal
-        document.getElementById('eventNameInput').value = '';
-        createEventModal.classList.add('hidden');
+            // Clear input and hide modal
+            document.getElementById('eventNameInput').value = '';
+            createEventModal.classList.add('hidden');
 
-        // Refresh events list
-        loadEvents();
-    });
+            // Refresh events list
+            loadEvents();
+        });
+    }
     
     const addGuestBtn = document.getElementById('addGuestBtn');
     if (addGuestBtn) {
