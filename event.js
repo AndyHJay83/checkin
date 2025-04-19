@@ -227,12 +227,35 @@ function showQRCode(guestData) {
     const modal = document.getElementById('qrCodeModal');
     const qrCodeContainer = document.getElementById('qrCodeContainer');
     
+    // Get event data
+    const username = localStorage.getItem('username');
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+    const event = events.find(e => e.id === currentEventId);
+    
+    if (!event) {
+        console.error('Event not found');
+        return;
+    }
+    
+    // Create QR data with both guest and event information
+    const qrData = {
+        event: {
+            id: event.id,
+            name: event.name
+        },
+        guest: {
+            id: guestData.id,
+            name: guestData.name,
+            count: guestData.count
+        }
+    };
+    
     // Clear previous QR code
     qrCodeContainer.innerHTML = '';
     
-    // Create QR code with guest data
+    // Create QR code with combined data
     new QRCode(qrCodeContainer, {
-        text: JSON.stringify(guestData),
+        text: JSON.stringify(qrData),
         width: 256,
         height: 256,
         colorDark: "#000000",
