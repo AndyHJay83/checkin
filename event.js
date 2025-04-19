@@ -1,4 +1,5 @@
-currentEventId = urlParams.get('id');
+// Global variables
+let currentEventId = null;
 let editingGuestId = null;
 
 // Initialize the page
