@@ -1,10 +1,9 @@
 // Global variables
 let currentEventId = null;
 let editingGuestId = null;
-const API_URL = 'http://localhost:3000/api';
 
 // Initialize the page
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     // Check if user is logged in
     if (!localStorage.getItem('isLoggedIn')) {
         window.location.href = 'login.html';
@@ -45,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Handle guest addition/editing
-    confirmAddGuest.addEventListener('click', async () => {
+    confirmAddGuest.addEventListener('click', () => {
         const guestName = document.getElementById('guestNameInput').value.trim();
         const guestCount = parseInt(document.getElementById('guestCountInput').value) || 1;
         
@@ -62,9 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             // Get current event
             const username = localStorage.getItem('username');
-            const response = await fetch(`${API_URL}/events/${username}`);
-            if (!response.ok) throw new Error('Failed to load events');
-            const events = await response.json();
+            const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
             
             // Find current event
             const eventIndex = events.findIndex(e => e.id === currentEventId);
@@ -95,19 +92,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 events[eventIndex].guests.push(newGuest);
             }
 
-            // Save updated event
-            const saveResponse = await fetch(`${API_URL}/event`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username,
-                    event: events[eventIndex]
-                }),
-            });
-            
-            if (!saveResponse.ok) throw new Error('Failed to save event');
+            // Save back to localStorage
+            localStorage.setItem(`events_${username}`, JSON.stringify(events));
 
             // Clear input and hide modal
             document.getElementById('guestNameInput').value = '';
@@ -129,12 +115,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // Function to load event details
-async function loadEventDetails() {
+function loadEventDetails() {
     try {
         const username = localStorage.getItem('username');
-        const response = await fetch(`${API_URL}/events/${username}`);
-        if (!response.ok) throw new Error('Failed to load events');
-        const events = await response.json();
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
         const currentEvent = events.find(event => event.id === currentEventId);
 
         if (currentEvent) {
@@ -149,12 +133,10 @@ async function loadEventDetails() {
 }
 
 // Function to load guests
-async function loadGuests() {
+function loadGuests() {
     try {
         const username = localStorage.getItem('username');
-        const response = await fetch(`${API_URL}/events/${username}`);
-        if (!response.ok) throw new Error('Failed to load events');
-        const events = await response.json();
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
         const event = events.find(e => e.id === currentEventId);
 
         if (!event) {
@@ -167,16 +149,7 @@ async function loadGuests() {
             console.log('No guests array found in event, initializing empty array');
             event.guests = [];
             // Save the event with empty guests array
-            await fetch(`${API_URL}/event`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username,
-                    event
-                }),
-            });
+            localStorage.setItem(`events_${username}`, JSON.stringify(events));
         }
 
         if (event.guests.length === 0) {
@@ -218,12 +191,10 @@ async function loadGuests() {
 }
 
 // Function to edit a guest
-async function editGuest(guestId) {
+function editGuest(guestId) {
     try {
         const username = localStorage.getItem('username');
-        const response = await fetch(`${API_URL}/events/${username}`);
-        if (!response.ok) throw new Error('Failed to load events');
-        const events = await response.json();
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
         const event = events.find(e => e.id === currentEventId);
         const guest = event.guests.find(g => g.id === guestId);
 
@@ -241,32 +212,19 @@ async function editGuest(guestId) {
 }
 
 // Function to remove a guest
-async function removeGuest(guestId) {
+function removeGuest(guestId) {
     if (!confirm('Are you sure you want to remove this guest?')) return;
 
     try {
         const username = localStorage.getItem('username');
-        const response = await fetch(`${API_URL}/events/${username}`);
-        if (!response.ok) throw new Error('Failed to load events');
-        const events = await response.json();
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
         const event = events.find(e => e.id === currentEventId);
 
         if (event) {
             event.guests = event.guests.filter(g => g.id !== guestId);
             
-            // Save updated event
-            const saveResponse = await fetch(`${API_URL}/event`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username,
-                    event
-                }),
-            });
-            
-            if (!saveResponse.ok) throw new Error('Failed to save event');
+            // Save back to localStorage
+            localStorage.setItem(`events_${username}`, JSON.stringify(events));
             
             // Refresh guests list
             loadGuests();
