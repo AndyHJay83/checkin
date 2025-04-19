@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    const username = localStorage.getItem('username');
+
     // Get event ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     currentEventId = urlParams.get('id');
@@ -54,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Get events from localStorage
-        const events = JSON.parse(localStorage.getItem('events')) || [];
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
         
         // Find current event and add/edit guest
         const eventIndex = events.findIndex(e => e.id === currentEventId);
@@ -85,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Save back to localStorage
-        localStorage.setItem('events', JSON.stringify(events));
+        localStorage.setItem(`events_${username}`, JSON.stringify(events));
 
         // Clear input and hide modal
         document.getElementById('guestNameInput').value = '';
@@ -104,7 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Function to load event details
 function loadEventDetails() {
-    const events = JSON.parse(localStorage.getItem('events')) || [];
+    const username = localStorage.getItem('username');
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
     const currentEvent = events.find(event => event.id === currentEventId);
 
     if (currentEvent) {
@@ -132,8 +135,9 @@ function editGuest(guestId) {
 
 // Function to load guests
 function loadGuests() {
+    const username = localStorage.getItem('username');
     const guestsList = document.getElementById('guestsList');
-    const events = JSON.parse(localStorage.getItem('events')) || [];
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
     const event = events.find(e => e.id === currentEventId);
 
     if (!event || !event.guests || event.guests.length === 0) {
@@ -161,8 +165,9 @@ function loadGuests() {
 }
 
 function showQRCode(eventId, guestId) {
+    const username = localStorage.getItem('username');
     console.log('Showing QR code for event:', eventId, 'guest:', guestId);
-    const events = JSON.parse(localStorage.getItem('events')) || [];
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
     const event = events.find(e => e.id === eventId);
     const guest = event.guests.find(g => g.id === guestId);
 
