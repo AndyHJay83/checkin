@@ -8,16 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Add logout button handler
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.onclick = function() {
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('username');
-            window.location.href = 'login.html';
-        };
-    }
-
     // Initialize localStorage with empty events array if it doesn't exist
     const username = localStorage.getItem('username');
     if (!localStorage.getItem(`events_${username}`)) {
@@ -29,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelCreateEvent = document.getElementById('cancelCreateEvent');
     const confirmCreateEvent = document.getElementById('confirmCreateEvent');
     const createEventModal = document.getElementById('createEventModal');
-    
+
     // Show create event modal
     if (createEventBtn) {
         createEventBtn.onclick = function() {
@@ -74,60 +64,39 @@ document.addEventListener('DOMContentLoaded', () => {
             loadEvents();
         };
     }
-    
-    const addGuestBtn = document.getElementById('addGuestBtn');
-    if (addGuestBtn) {
-        addGuestBtn.onclick = handleAddGuest;
-    }
-    
+
     // Load existing events
     loadEvents();
 });
 
-// Handle create event button click
-function handleCreateEvent() {
-    const eventNameInput = document.getElementById('newEventName');
-    if (!eventNameInput) {
-        console.error('Event name input not found');
+// Function to handle logout
+function logout() {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('username');
+    window.location.href = 'login.html';
+}
+
+// Function to load all events
+function loadEvents() {
+    const eventsList = document.getElementById('eventsList');
+    const username = localStorage.getItem('username');
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+
+    if (events.length === 0) {
+        eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
         return;
     }
-    
-    const eventName = eventNameInput.value.trim();
-    if (!eventName) {
-        alert('Please enter an event name');
-        return;
-    }
-    
-    try {
-        // Get existing events
-        const username = localStorage.getItem('username');
-        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-        
-        // Create new event
-        const newEvent = {
-            id: Date.now().toString(),
-            name: eventName,
-            guests: []
-        };
-        
-        // Add to events array
-        events.push(newEvent);
-        
-        // Save back to localStorage
-        localStorage.setItem(`events_${username}`, JSON.stringify(events));
-        
-        // Clear input
-        eventNameInput.value = '';
-        
-        // Refresh display
-        loadEvents();
-        
-        // Select the new event
-        selectEvent(newEvent.id);
-    } catch (error) {
-        console.error('Error creating event:', error);
-        alert('Error creating event. Please try again.');
-    }
+
+    eventsList.innerHTML = events.map(event => `
+        <div class="bg-white p-4 rounded-md shadow">
+            <h3 class="font-semibold">${event.name}</h3>
+            <p class="text-sm text-gray-600">${event.guests.length} guest(s)</p>
+            <button onclick="window.location.href='event.html?id=${event.id}'" 
+                    class="mt-2 text-blue-500 hover:text-blue-700">
+                Manage Guests
+            </button>
+        </div>
+    `).join('');
 }
 
 // Handle add guest button click
@@ -184,29 +153,6 @@ function handleAddGuest() {
         console.error('Error adding guest:', error);
         alert('Error adding guest. Please try again.');
     }
-}
-
-// Function to load all events
-function loadEvents() {
-    const eventsList = document.getElementById('eventsList');
-    const username = localStorage.getItem('username');
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-
-    if (events.length === 0) {
-        eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
-        return;
-    }
-
-    eventsList.innerHTML = events.map(event => `
-        <div class="bg-white p-4 rounded-md shadow">
-            <h3 class="font-semibold">${event.name}</h3>
-            <p class="text-sm text-gray-600">${event.guests.length} guest(s)</p>
-            <button onclick="window.location.href='event.html?id=${event.id}'" 
-                    class="mt-2 text-blue-500 hover:text-blue-700">
-                Manage Guests
-            </button>
-        </div>
-    `).join('');
 }
 
 // Function to select an event
