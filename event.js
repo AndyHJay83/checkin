@@ -129,66 +129,39 @@ function loadEventDetails() {
 
 // Function to load guests
 function loadGuests() {
-    const username = localStorage.getItem('username');
-    console.log('Loading guests for username:', username);
-    
-    const guestsList = document.getElementById('guestsList');
-    if (!guestsList) {
-        console.error('guestsList element not found');
-        return;
-    }
-    
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    console.log('All events:', events);
-    
-    const event = events.find(e => e.id === currentEventId);
-    console.log('Current event:', event);
-    console.log('Current event ID:', currentEventId);
+    const guestList = document.getElementById('guestList');
+    const template = document.getElementById('guestItemTemplate');
+    guestList.innerHTML = '';
 
-    if (!event) {
-        console.log('Event not found');
-        guestsList.innerHTML = '<p class="text-gray-500">Event not found.</p>';
-        return;
-    }
+    const event = getEvent();
+    if (!event || !event.guests) return;
 
-    if (!event.guests) {
-        console.log('No guests array found in event, initializing empty array');
-        event.guests = [];
-        localStorage.setItem(`events_${username}`, JSON.stringify(events));
-    }
+    event.guests.forEach(guest => {
+        const clone = template.content.cloneNode(true);
+        const guestElement = clone.querySelector('div');
+        
+        // Set guest information
+        const nameElement = guestElement.querySelector('h3');
+        const emailElement = guestElement.querySelector('p:nth-child(2)');
+        const ticketsElement = guestElement.querySelector('p:nth-child(3)');
+        
+        nameElement.textContent = guest.name;
+        emailElement.textContent = `Email: ${guest.email || 'N/A'}`;
+        ticketsElement.textContent = `Tickets: ${guest.tickets || 1}`;
+        
+        // Update button onclick handlers
+        const buttons = guestElement.querySelectorAll('button');
+        buttons[0].setAttribute('onclick', `generateTicketQRCode('${guest.id}')`);
+        buttons[1].setAttribute('onclick', `editGuest('${guest.id}')`);
+        buttons[2].setAttribute('onclick', `removeGuest('${guest.id}')`);
+        
+        guestList.appendChild(guestElement);
+    });
 
+    // If no guests, show a message
     if (event.guests.length === 0) {
-        console.log('No guests in the array');
-        guestsList.innerHTML = '<p class="text-gray-500">No guests added yet.</p>';
-        return;
+        guestList.innerHTML = '<p class="text-gray-500 text-center">No guests added yet.</p>';
     }
-
-    console.log('Guests to display:', event.guests);
-    guestsList.innerHTML = event.guests.map(guest => `
-        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
-            <div>
-                <h3 class="font-semibold">${guest.name}</h3>
-                <p class="text-sm text-gray-500">${guest.count} guest${guest.count > 1 ? 's' : ''}</p>
-                <p class="text-sm ${guest.checkedIn ? 'text-green-500' : 'text-gray-500'}">
-                    ${guest.checkedIn ? 'Checked in' : 'Not checked in'}
-                </p>
-            </div>
-            <div class="flex space-x-2">
-                <button onclick="showQRCode('${currentEventId}', '${guest.id}')" 
-                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                    Show QR
-                </button>
-                <button onclick="editGuest('${guest.id}')" 
-                        class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
-                    Edit
-                </button>
-                <button onclick="removeGuest('${guest.id}')" 
-                        class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
-                    Remove
-                </button>
-            </div>
-        </div>
-    `).join('');
 }
 
 // Function to edit a guest
