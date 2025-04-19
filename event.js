@@ -116,78 +116,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Function to load event details
 function loadEventDetails() {
-    try {
-        const username = localStorage.getItem('username');
-        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-        const currentEvent = events.find(event => event.id === currentEventId);
+    const username = localStorage.getItem('username');
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('id');
 
-        if (currentEvent) {
-            document.getElementById('eventTitle').textContent = currentEvent.name;
-        } else {
-            window.location.href = 'settings.html';
-        }
-    } catch (error) {
-        console.error('Error loading event details:', error);
-        alert('Failed to load event details');
+    if (!eventId) {
+        window.location.href = 'settings.html';
+        return;
     }
+
+    fetch(`http://localhost:3000/api/events/${username}/${eventId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load event details');
+            }
+            return response.json();
+        })
+        .then(event => {
+            const eventTitle = document.getElementById('eventTitle');
+            if (eventTitle) {
+                eventTitle.textContent = event.name;
+            }
+            loadGuests();
+        })
+        .catch(error => {
+            console.error('Error loading event details:', error);
+            alert('Failed to load event details');
+        });
 }
 
 // Function to load guests
 function loadGuests() {
-    try {
-        const username = localStorage.getItem('username');
-        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-        const event = events.find(e => e.id === currentEventId);
+    const username = localStorage.getItem('username');
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('id');
 
-        if (!event) {
-            console.log('Event not found');
-            document.getElementById('guestsList').innerHTML = '<p class="text-gray-500">Event not found.</p>';
-            return;
-        }
+    fetch(`http://localhost:3000/api/events/${username}/${eventId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load guests');
+            }
+            return response.json();
+        })
+        .then(event => {
+            const guestsList = document.getElementById('guestsList');
+            if (!event.guests || event.guests.length === 0) {
+                guestsList.innerHTML = '<p class="text-gray-500">No guests added yet</p>';
+                return;
+            }
 
-        if (!event.guests) {
-            console.log('No guests array found in event, initializing empty array');
-            event.guests = [];
-            // Save the event with empty guests array
-            localStorage.setItem(`events_${username}`, JSON.stringify(events));
-        }
-
-        if (event.guests.length === 0) {
-            console.log('No guests in the array');
-            document.getElementById('guestsList').innerHTML = '<p class="text-gray-500">No guests added yet.</p>';
-            return;
-        }
-
-        console.log('Guests to display:', event.guests);
-        document.getElementById('guestsList').innerHTML = event.guests.map(guest => `
-            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
-                <div>
-                    <h3 class="font-semibold">${guest.name}</h3>
-                    <p class="text-sm text-gray-500">${guest.count} guest${guest.count > 1 ? 's' : ''}</p>
-                    <p class="text-sm ${guest.checkedIn ? 'text-green-500' : 'text-gray-500'}">
-                        ${guest.checkedIn ? 'Checked in' : 'Not checked in'}
+            guestsList.innerHTML = event.guests.map(guest => `
+                <div class="border rounded-md p-4 ${guest.checkedIn ? 'bg-green-50' : ''}">
+                    <h3 class="font-semibold">${guest.firstName} ${guest.lastName}</h3>
+                    <p class="text-sm text-gray-600">${guest.ticketCount} ticket(s)</p>
+                    <p class="text-sm ${guest.checkedIn ? 'text-green-600' : 'text-gray-600'}">
+                        ${guest.checkedIn ? 'Checked In' : 'Not Checked In'}
                     </p>
                 </div>
-                <div class="flex space-x-2">
-                    <button onclick="showQRCode(${JSON.stringify(guest).replace(/"/g, '&quot;')})" 
-                            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                        Show QR
-                    </button>
-                    <button onclick="editGuest('${guest.id}')" 
-                            class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
-                        Edit
-                    </button>
-                    <button onclick="removeGuest('${guest.id}')" 
-                            class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
-                        Remove
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('Error loading guests:', error);
-        alert('Failed to load guests');
-    }
+            `).join('');
+        })
+        .catch(error => {
+            console.error('Error loading guests:', error);
+            guestsList.innerHTML = '<p class="text-red-500">Failed to load guests</p>';
+        });
 }
 
 // Function to edit a guest
@@ -292,4 +283,56 @@ function saveQRCode() {
     link.download = 'guest-qr-code.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
+}
+
+// Handle add guest button click
+function handleAddGuest() {
+    const firstName = document.getElementById('firstName')?.value.trim();
+    const lastName = document.getElementById('lastName')?.value.trim();
+    const ticketCount = parseInt(document.getElementById('ticketCount')?.value || '0');
+    
+    if (!firstName || !lastName) {
+        alert('Please enter both first and last name');
+        return;
+    }
+    
+    if (isNaN(ticketCount) || ticketCount < 1) {
+        alert('Please enter a valid number of tickets (minimum 1)');
+        return;
+    }
+
+    const username = localStorage.getItem('username');
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('id');
+
+    const newGuest = {
+        id: Date.now().toString(),
+        firstName,
+        lastName,
+        ticketCount,
+        checkedIn: false
+    };
+
+    fetch(`http://localhost:3000/api/events/${username}/${eventId}/guests`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newGuest)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to add guest');
+        }
+        // Clear form
+        document.getElementById('firstName').value = '';
+        document.getElementById('lastName').value = '';
+        document.getElementById('ticketCount').value = '1';
+        // Refresh guests list
+        loadGuests();
+    })
+    .catch(error => {
+        console.error('Error adding guest:', error);
+        alert('Error adding guest. Please try again.');
+    });
 } 

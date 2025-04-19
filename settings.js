@@ -44,24 +44,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Create new event
+            const username = localStorage.getItem('username');
             const newEvent = {
                 id: Date.now().toString(),
                 name: eventName,
                 guests: []
             };
 
-            // Get existing events and add new event
-            const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-            events.push(newEvent);
-            localStorage.setItem(`events_${username}`, JSON.stringify(events));
-
-            // Clear input and hide modal
-            document.getElementById('eventNameInput').value = '';
-            createEventModal.classList.add('hidden');
-
-            // Refresh events list
-            loadEvents();
+            fetch(`http://localhost:3000/api/events/${username}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newEvent)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create event');
+                }
+                // Clear input and hide modal
+                document.getElementById('eventNameInput').value = '';
+                createEventModal.classList.add('hidden');
+                // Refresh events list
+                loadEvents();
+            })
+            .catch(error => {
+                console.error('Error creating event:', error);
+                alert('Error creating event. Please try again.');
+            });
         };
     }
 
@@ -80,33 +90,46 @@ function logout() {
 function loadEvents() {
     const eventsList = document.getElementById('eventsList');
     const username = localStorage.getItem('username');
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+    
+    // Fetch events from API
+    fetch(`http://localhost:3000/api/events/${username}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load events');
+            }
+            return response.json();
+        })
+        .then(events => {
+            if (events.length === 0) {
+                eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
+                return;
+            }
 
-    if (events.length === 0) {
-        eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
-        return;
-    }
-
-    eventsList.innerHTML = events.map(event => `
-        <div class="bg-white p-4 rounded-lg shadow mb-4">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h3 class="text-lg font-semibold">${event.name}</h3>
-                    <p class="text-sm text-gray-600">${event.guests.length} guest(s)</p>
+            eventsList.innerHTML = events.map(event => `
+                <div class="bg-white p-4 rounded-lg shadow mb-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold">${event.name}</h3>
+                            <p class="text-sm text-gray-600">${event.guests.length} guest(s)</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="window.location.href='event.html?id=${event.id}'" 
+                                    class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
+                                Manage Guests
+                            </button>
+                            <button onclick="deleteEvent('${event.id}')" 
+                                    class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex space-x-2">
-                    <button onclick="window.location.href='event.html?id=${event.id}'" 
-                            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
-                        Manage Guests
-                    </button>
-                    <button onclick="deleteEvent('${event.id}')" 
-                            class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm">
-                        Delete
-                    </button>
-                </div>
-            </div>
-        </div>
-    `).join('');
+            `).join('');
+        })
+        .catch(error => {
+            console.error('Error loading events:', error);
+            eventsList.innerHTML = '<p class="text-red-500">Failed to load events</p>';
+        });
 }
 
 // Function to delete an event
@@ -115,32 +138,21 @@ function deleteEvent(eventId) {
         return;
     }
 
-    try {
-        const username = localStorage.getItem('username');
-        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-        
-        // Filter out the event to be deleted
-        const updatedEvents = events.filter(event => event.id !== eventId);
-        
-        // Save back to localStorage
-        localStorage.setItem(`events_${username}`, JSON.stringify(updatedEvents));
-        
-        // Refresh events list
-        loadEvents();
-        
-        // If the deleted event was the current event, clear the current event ID
-        if (currentEventId === eventId) {
-            currentEventId = null;
-            const guestForm = document.getElementById('guestForm');
-            if (guestForm) {
-                guestForm.classList.add('hidden');
-            }
-            loadGuests();
+    const username = localStorage.getItem('username');
+    
+    fetch(`http://localhost:3000/api/events/${username}/${eventId}`, {
+        method: 'DELETE'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to delete event');
         }
-    } catch (error) {
+        loadEvents();
+    })
+    .catch(error => {
         console.error('Error deleting event:', error);
         alert('Error deleting event. Please try again.');
-    }
+    });
 }
 
 // Handle add guest button click
