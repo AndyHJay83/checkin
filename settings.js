@@ -88,20 +88,20 @@ function loadEvents() {
     }
 
     eventsList.innerHTML = events.map(event => `
-        <div class="bg-white p-4 rounded-md shadow mb-4">
-            <div class="flex justify-between items-start">
+        <div class="bg-white p-4 rounded-lg shadow mb-4">
+            <div class="flex justify-between items-center">
                 <div>
-                    <h3 class="font-semibold">${event.name}</h3>
+                    <h3 class="text-lg font-semibold">${event.name}</h3>
                     <p class="text-sm text-gray-600">${event.guests.length} guest(s)</p>
                 </div>
                 <div class="flex space-x-2">
                     <button onclick="window.location.href='event.html?id=${event.id}'" 
-                            class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
+                            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
                         Manage Guests
                     </button>
                     <button onclick="deleteEvent('${event.id}')" 
-                            class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm">
-                        Delete Event
+                            class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm">
+                        Delete
                     </button>
                 </div>
             </div>
