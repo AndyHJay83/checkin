@@ -130,8 +130,8 @@ function loadEventDetails() {
 function editGuest(guestId) {
     const username = localStorage.getItem('username');
     const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    const currentEvent = events.find(event => event.id === currentEventId);
-    const guest = currentEvent.guests.find(g => g.id === guestId);
+    const event = events.find(e => e.id === currentEventId);
+    const guest = event.guests.find(g => g.id === guestId);
 
     if (guest) {
         editingGuestId = guestId;
@@ -277,15 +277,15 @@ function saveQRCode() {
 
 // Function to remove a guest
 function removeGuest(guestId) {
-    const username = localStorage.getItem('username');
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    
-    events.forEach(event => {
-        if (event.id === currentEventId) {
-            event.guests = event.guests.filter(guest => guest.id !== guestId);
+    if (confirm('Are you sure you want to remove this guest?')) {
+        const username = localStorage.getItem('username');
+        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+        const eventIndex = events.findIndex(e => e.id === currentEventId);
+        
+        if (eventIndex !== -1) {
+            events[eventIndex].guests = events[eventIndex].guests.filter(g => g.id !== guestId);
+            localStorage.setItem(`events_${username}`, JSON.stringify(events));
+            loadGuests();
         }
-    });
-
-    localStorage.setItem(`events_${username}`, JSON.stringify(events));
-    loadGuests();
+    }
 } 
