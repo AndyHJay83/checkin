@@ -54,8 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Get events from localStorage
-        const username = localStorage.getItem('username');
-        const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+        const events = JSON.parse(localStorage.getItem('events')) || [];
         
         // Find current event and add/edit guest
         events.forEach(event => {
@@ -67,7 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         event.guests[guestIndex] = {
                             id: editingGuestId,
                             name: guestName,
-                            count: guestCount
+                            count: guestCount,
+                            checkedIn: false
                         };
                     }
                 } else {
@@ -75,14 +75,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     event.guests.push({
                         id: Date.now().toString(),
                         name: guestName,
-                        count: guestCount
+                        count: guestCount,
+                        checkedIn: false
                     });
                 }
             }
         });
 
         // Save back to localStorage
-        localStorage.setItem(`events_${username}`, JSON.stringify(events));
+        localStorage.setItem('events', JSON.stringify(events));
 
         // Clear input and hide modal
         document.getElementById('guestNameInput').value = '';
@@ -101,8 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Function to load event details
 function loadEventDetails() {
-    const username = localStorage.getItem('username');
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+    const events = JSON.parse(localStorage.getItem('events')) || [];
     const currentEvent = events.find(event => event.id === currentEventId);
 
     if (currentEvent) {
@@ -131,9 +131,8 @@ function editGuest(guestId) {
 // Function to load guests
 function loadGuests() {
     const guestsList = document.getElementById('guestsList');
-    const eventId = new URLSearchParams(window.location.search).get('id');
     const events = JSON.parse(localStorage.getItem('events')) || [];
-    const event = events.find(e => e.id === eventId);
+    const event = events.find(e => e.id === currentEventId);
 
     if (!event || !event.guests) {
         guestsList.innerHTML = '<p class="text-gray-500">No guests added yet.</p>';
@@ -150,7 +149,7 @@ function loadGuests() {
                 </p>
             </div>
             <div class="flex space-x-2">
-                <button onclick="showQRCode('${eventId}', '${guest.id}')" 
+                <button onclick="showQRCode('${currentEventId}', '${guest.id}')" 
                         class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                     Show QR
                 </button>
@@ -160,11 +159,15 @@ function loadGuests() {
 }
 
 function showQRCode(eventId, guestId) {
+    console.log('Showing QR code for event:', eventId, 'guest:', guestId);
     const events = JSON.parse(localStorage.getItem('events')) || [];
     const event = events.find(e => e.id === eventId);
     const guest = event.guests.find(g => g.id === guestId);
 
-    if (!guest) return;
+    if (!guest) {
+        console.error('Guest not found');
+        return;
+    }
 
     const qrData = JSON.stringify({
         eventId: eventId,
@@ -184,10 +187,12 @@ function showQRCode(eventId, guestId) {
             light: '#ffffff'
         }
     }, function (error) {
-        if (error) console.error(error);
+        if (error) {
+            console.error('QR code generation error:', error);
+            return;
+        }
+        document.getElementById('qrCodeModal').classList.remove('hidden');
     });
-
-    document.getElementById('qrCodeModal').classList.remove('hidden');
 }
 
 function closeQRCodeModal() {
