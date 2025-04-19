@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Event</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
@@ -63,6 +64,21 @@
             <!-- Guests will be listed here -->
         </div>
     </div>
+
+    <!-- QR Code Modal -->
+    <div id="qrCodeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4">Guest QR Code</h2>
+                <div id="qrCodeContainer" class="mb-4"></div>
+                <div class="flex justify-end space-x-2">
+                    <button onclick="closeQRCodeModal()" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Close</button>
+                    <button onclick="saveQRCode()" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Save QR Code</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="event.js"></script>
 </body>
 </html> 

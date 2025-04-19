@@ -131,33 +131,78 @@ function editGuest(guestId) {
 // Function to load guests
 function loadGuests() {
     const guestsList = document.getElementById('guestsList');
-    const username = localStorage.getItem('username');
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    const currentEvent = events.find(event => event.id === currentEventId);
+    const eventId = new URLSearchParams(window.location.search).get('id');
+    const events = JSON.parse(localStorage.getItem('events')) || [];
+    const event = events.find(e => e.id === eventId);
 
-    if (!currentEvent || currentEvent.guests.length === 0) {
-        guestsList.innerHTML = '<p class="text-gray-500">No guests added yet</p>';
+    if (!event || !event.guests) {
+        guestsList.innerHTML = '<p class="text-gray-500">No guests added yet.</p>';
         return;
     }
 
-    guestsList.innerHTML = currentEvent.guests.map(guest => `
-        <div class="bg-white p-4 rounded-md shadow flex justify-between items-center">
+    guestsList.innerHTML = event.guests.map(guest => `
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
-                <span class="font-medium">${guest.name}</span>
-                <span class="text-sm text-gray-600 ml-2">(${guest.count} guest${guest.count > 1 ? 's' : ''})</span>
+                <h3 class="font-semibold">${guest.name}</h3>
+                <p class="text-sm text-gray-500">${guest.count} guest${guest.count > 1 ? 's' : ''}</p>
+                <p class="text-sm ${guest.checkedIn ? 'text-green-500' : 'text-gray-500'}">
+                    ${guest.checkedIn ? 'Checked in' : 'Not checked in'}
+                </p>
             </div>
             <div class="flex space-x-2">
-                <button onclick="editGuest('${guest.id}')" 
-                        class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                    Edit
-                </button>
-                <button onclick="removeGuest('${guest.id}')" 
-                        class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600">
-                    Remove
+                <button onclick="showQRCode('${eventId}', '${guest.id}')" class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                    QR
                 </button>
             </div>
         </div>
     `).join('');
+}
+
+function showQRCode(eventId, guestId) {
+    const events = JSON.parse(localStorage.getItem('events')) || [];
+    const event = events.find(e => e.id === eventId);
+    const guest = event.guests.find(g => g.id === guestId);
+
+    if (!guest) return;
+
+    const qrData = JSON.stringify({
+        eventId: eventId,
+        guestId: guestId,
+        guestName: guest.name,
+        guestCount: guest.count
+    });
+
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    qrCodeContainer.innerHTML = '';
+
+    QRCode.toCanvas(qrCodeContainer, qrData, {
+        width: 200,
+        margin: 2,
+        color: {
+            dark: '#000000',
+            light: '#ffffff'
+        }
+    }, function (error) {
+        if (error) console.error(error);
+    });
+
+    document.getElementById('qrCodeModal').classList.remove('hidden');
+}
+
+function closeQRCodeModal() {
+    document.getElementById('qrCodeModal').classList.add('hidden');
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    qrCodeContainer.innerHTML = '';
+}
+
+function saveQRCode() {
+    const canvas = document.querySelector('#qrCodeContainer canvas');
+    if (!canvas) return;
+
+    const link = document.createElement('a');
+    link.download = 'guest-qr-code.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
 }
 
 // Function to remove a guest
