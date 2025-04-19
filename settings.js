@@ -11,11 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add logout button handler
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
+        logoutBtn.onclick = function() {
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('username');
             window.location.href = 'login.html';
-        });
+        };
     }
 
     // Initialize localStorage with empty events array if it doesn't exist
@@ -32,21 +32,21 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Show create event modal
     if (createEventBtn) {
-        createEventBtn.addEventListener('click', () => {
+        createEventBtn.onclick = function() {
             createEventModal.classList.remove('hidden');
-        });
+        };
     }
 
     // Hide create event modal
     if (cancelCreateEvent) {
-        cancelCreateEvent.addEventListener('click', () => {
+        cancelCreateEvent.onclick = function() {
             createEventModal.classList.add('hidden');
-        });
+        };
     }
 
     // Handle event creation
     if (confirmCreateEvent) {
-        confirmCreateEvent.addEventListener('click', () => {
+        confirmCreateEvent.onclick = function() {
             const eventName = document.getElementById('eventNameInput').value.trim();
             
             if (!eventName) {
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Refresh events list
             loadEvents();
-        });
+        };
     }
     
     const addGuestBtn = document.getElementById('addGuestBtn');
