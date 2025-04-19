@@ -38,7 +38,9 @@ const writeUserData = (username, data) => {
 app.get('/api/events/:username', (req, res) => {
     try {
         const { username } = req.params;
+        console.log(`Getting events for user: ${username}`);
         const userData = readUserData(username);
+        console.log(`Found events:`, userData.events);
         res.json(userData.events);
     } catch (error) {
         console.error('Error getting events:', error);
@@ -50,6 +52,7 @@ app.get('/api/events/:username', (req, res) => {
 app.get('/api/events/:username/:eventId', (req, res) => {
     try {
         const { username, eventId } = req.params;
+        console.log(`Getting event ${eventId} for user ${username}`);
         const userData = readUserData(username);
         const event = userData.events.find(e => e.id === eventId);
         if (event) {
@@ -125,7 +128,36 @@ app.delete('/api/events/:username/:eventId', (req, res) => {
     }
 });
 
+// Add a guest to an event
+app.post('/api/events/:username/:eventId/guests', (req, res) => {
+    try {
+        const { username, eventId } = req.params;
+        const guest = req.body;
+        console.log(`Adding guest to event ${eventId} for user ${username}:`, guest);
+
+        const userData = readUserData(username);
+        const event = userData.events.find(e => e.id === eventId);
+        
+        if (!event) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+
+        if (!event.guests) {
+            event.guests = [];
+        }
+
+        event.guests.push(guest);
+        writeUserData(username, userData);
+
+        res.json(guest);
+    } catch (error) {
+        console.error('Error adding guest:', error);
+        res.status(500).json({ error: 'Failed to add guest' });
+    }
+});
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Data directory: ${dataDir}`);
 }); 
