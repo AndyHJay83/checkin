@@ -1,4 +1,4 @@
-let currentEventId = null;
+currentEventId = urlParams.get('id');
 let editingGuestId = null;
 
 // Initialize the page
