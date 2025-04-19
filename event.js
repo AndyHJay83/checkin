@@ -223,7 +223,7 @@ function showQRCode(eventId, guestId) {
     const qrCodeContainer = document.getElementById('qrCodeContainer');
     qrCodeContainer.innerHTML = '';
 
-    // Create QR code using the new library
+    // Create QR code using the qrcode-generator library
     const qr = qrcode(0, 'M');
     qr.addData(qrData);
     qr.make();
