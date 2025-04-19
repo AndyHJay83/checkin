@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Event</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 id="eventTitle" class="text-2xl font-bold">Event Name</h1>
+            <button onclick="window.location.href='settings.html'" 
+                    class="text-gray-600 hover:text-gray-800">
+                ← Back to Events
+            </button>
+        </div>
+
+        <!-- Add Guest Button -->
+        <button id="addGuestBtn" 
+                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mb-6">
+            Add Guest
+        </button>
+
+        <!-- Add Guest Modal -->
+        <div id="addGuestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden">
+            <div class="flex items-center justify-center min-h-screen">
+                <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+                    <h2 class="text-xl font-semibold mb-4">Add Guest</h2>
+                    <input type="text" 
+                           id="guestNameInput" 
+                           placeholder="Enter guest name" 
+                           class="w-full p-2 border rounded-md mb-4">
+                    <div class="flex justify-end space-x-2">
+                        <button id="cancelAddGuest" 
+                                class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                            Cancel
+                        </button>
+                        <button id="confirmAddGuest" 
+                                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                            Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guests List -->
+        <div id="guestsList" class="space-y-4">
+            <!-- Guests will be listed here -->
+        </div>
+    </div>
+    <script src="event.js"></script>
+</body>
+</html> 
