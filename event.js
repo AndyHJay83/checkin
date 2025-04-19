@@ -1,4 +1,5 @@
 let currentEventId = null;
+let editingGuestId = null;
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,6 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show add guest modal
     addGuestBtn.addEventListener('click', () => {
+        editingGuestId = null;
+        document.getElementById('guestNameInput').value = '';
+        document.getElementById('guestCountInput').value = '1';
+        document.getElementById('confirmAddGuest').textContent = 'Add';
         addGuestModal.classList.remove('hidden');
     });
 
@@ -33,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addGuestModal.classList.add('hidden');
     });
 
-    // Handle guest addition
+    // Handle guest addition/editing
     confirmAddGuest.addEventListener('click', () => {
         const guestName = document.getElementById('guestNameInput').value.trim();
         const guestCount = parseInt(document.getElementById('guestCountInput').value) || 1;
@@ -52,14 +57,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = localStorage.getItem('username');
         const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
         
-        // Find current event and add guest
+        // Find current event and add/edit guest
         events.forEach(event => {
             if (event.id === currentEventId) {
-                event.guests.push({
-                    id: Date.now().toString(),
-                    name: guestName,
-                    count: guestCount
-                });
+                if (editingGuestId) {
+                    // Update existing guest
+                    const guestIndex = event.guests.findIndex(g => g.id === editingGuestId);
+                    if (guestIndex !== -1) {
+                        event.guests[guestIndex] = {
+                            id: editingGuestId,
+                            name: guestName,
+                            count: guestCount
+                        };
+                    }
+                } else {
+                    // Add new guest
+                    event.guests.push({
+                        id: Date.now().toString(),
+                        name: guestName,
+                        count: guestCount
+                    });
+                }
             }
         });
 
@@ -70,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('guestNameInput').value = '';
         document.getElementById('guestCountInput').value = '1';
         addGuestModal.classList.add('hidden');
+        editingGuestId = null;
 
         // Refresh guests list
         loadGuests();
@@ -93,6 +112,22 @@ function loadEventDetails() {
     }
 }
 
+// Function to edit a guest
+function editGuest(guestId) {
+    const username = localStorage.getItem('username');
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+    const currentEvent = events.find(event => event.id === currentEventId);
+    const guest = currentEvent.guests.find(g => g.id === guestId);
+
+    if (guest) {
+        editingGuestId = guestId;
+        document.getElementById('guestNameInput').value = guest.name;
+        document.getElementById('guestCountInput').value = guest.count;
+        document.getElementById('confirmAddGuest').textContent = 'Update';
+        document.getElementById('addGuestModal').classList.remove('hidden');
+    }
+}
+
 // Function to load guests
 function loadGuests() {
     const guestsList = document.getElementById('guestsList');
@@ -111,10 +146,16 @@ function loadGuests() {
                 <span class="font-medium">${guest.name}</span>
                 <span class="text-sm text-gray-600 ml-2">(${guest.count} guest${guest.count > 1 ? 's' : ''})</span>
             </div>
-            <button onclick="removeGuest('${guest.id}')" 
-                    class="text-red-500 hover:text-red-700">
-                Remove
-            </button>
+            <div class="space-x-2">
+                <button onclick="editGuest('${guest.id}')" 
+                        class="text-blue-500 hover:text-blue-700">
+                    Edit
+                </button>
+                <button onclick="removeGuest('${guest.id}')" 
+                        class="text-red-500 hover:text-red-700">
+                    Remove
+                </button>
+            </div>
         </div>
     `).join('');
 }
