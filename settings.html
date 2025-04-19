@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Settings</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-100">
     <!-- Navigation -->
@@ -38,7 +36,7 @@
                 <h2 class="text-2xl font-bold mb-4">Events</h2>
                 <div class="flex gap-2 mb-4">
                     <input type="text" id="newEventName" placeholder="New event name" class="flex-1 p-2 border rounded-md">
-                    <button onclick="createEvent()" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                    <button id="createEventBtn" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
                         Create Event
                     </button>
                 </div>
@@ -54,7 +52,7 @@
                     <input type="text" id="firstName" placeholder="First Name" class="w-full p-2 border rounded-md">
                     <input type="text" id="lastName" placeholder="Last Name" class="w-full p-2 border rounded-md">
                     <input type="number" id="ticketCount" placeholder="Number of Tickets" min="1" class="w-full p-2 border rounded-md">
-                    <button onclick="addGuest()" class="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
+                    <button id="addGuestBtn" class="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
                         Add Guest
                     </button>
                 </div>

@@ -2,18 +2,17 @@ let currentEventId = null;
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
+    // Add event listeners
+    document.getElementById('createEventBtn').addEventListener('click', createEvent);
+    document.getElementById('addGuestBtn').addEventListener('click', addGuest);
+    
+    // Load existing events
     loadEvents();
 });
 
 // Function to create a new event
-function createEvent(event) {
-    // Prevent default form submission if event exists
-    if (event) {
-        event.preventDefault();
-    }
-
+function createEvent() {
     const eventName = document.getElementById('newEventName').value.trim();
-    console.log('Creating event with name:', eventName);
     
     if (!eventName) {
         alert('Please enter an event name');
@@ -21,15 +20,7 @@ function createEvent(event) {
     }
 
     // Get existing events or initialize empty array
-    let events = [];
-    try {
-        const storedEvents = localStorage.getItem('events');
-        console.log('Stored events:', storedEvents);
-        events = storedEvents ? JSON.parse(storedEvents) : [];
-    } catch (error) {
-        console.error('Error reading events from localStorage:', error);
-        events = [];
-    }
+    let events = JSON.parse(localStorage.getItem('events') || '[]');
 
     // Create new event
     const newEvent = {
@@ -37,21 +28,12 @@ function createEvent(event) {
         name: eventName,
         guests: []
     };
-    console.log('New event created:', newEvent);
 
     // Add new event to array
     events.push(newEvent);
-    console.log('Updated events array:', events);
 
     // Save to localStorage
-    try {
-        localStorage.setItem('events', JSON.stringify(events));
-        console.log('Events saved to localStorage');
-    } catch (error) {
-        console.error('Error saving events to localStorage:', error);
-        alert('Error saving event. Please try again.');
-        return;
-    }
+    localStorage.setItem('events', JSON.stringify(events));
 
     // Clear input and refresh display
     document.getElementById('newEventName').value = '';
@@ -64,16 +46,7 @@ function createEvent(event) {
 // Function to load all events
 function loadEvents() {
     const eventsList = document.getElementById('eventsList');
-    let events = [];
-    
-    try {
-        const storedEvents = localStorage.getItem('events');
-        events = storedEvents ? JSON.parse(storedEvents) : [];
-        console.log('Loading events:', events);
-    } catch (error) {
-        console.error('Error loading events:', error);
-        events = [];
-    }
+    const events = JSON.parse(localStorage.getItem('events') || '[]');
 
     if (events.length === 0) {
         eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
@@ -91,7 +64,6 @@ function loadEvents() {
 
 // Function to select an event
 function selectEvent(eventId) {
-    console.log('Selecting event:', eventId);
     currentEventId = eventId;
     document.getElementById('guestForm').classList.remove('hidden');
     loadGuests();
@@ -161,67 +133,12 @@ function loadGuests() {
     }
 
     guestsList.innerHTML = currentEvent.guests.map(guest => `
-        <div class="border rounded-md p-4 flex justify-between items-center ${guest.checkedIn ? 'bg-green-50' : ''}">
-            <div>
-                <h3 class="font-semibold">${guest.firstName} ${guest.lastName}</h3>
-                <p class="text-sm text-gray-600">${guest.ticketCount} ticket(s)</p>
-                <p class="text-sm ${guest.checkedIn ? 'text-green-600' : 'text-gray-600'}">
-                    ${guest.checkedIn ? 'Checked In' : 'Not Checked In'}
-                </p>
-            </div>
-            <div class="flex flex-col items-center">
-                <div id="qrcode-${guest.id}" class="mb-2"></div>
-                <button onclick="copyQRData('${guest.id}')" 
-                        class="text-blue-500 hover:text-blue-700 text-sm">
-                    Copy QR Data
-                </button>
-            </div>
+        <div class="border rounded-md p-4 ${guest.checkedIn ? 'bg-green-50' : ''}">
+            <h3 class="font-semibold">${guest.firstName} ${guest.lastName}</h3>
+            <p class="text-sm text-gray-600">${guest.ticketCount} ticket(s)</p>
+            <p class="text-sm ${guest.checkedIn ? 'text-green-600' : 'text-gray-600'}">
+                ${guest.checkedIn ? 'Checked In' : 'Not Checked In'}
+            </p>
         </div>
     `).join('');
-
-    // Generate QR codes for each guest
-    currentEvent.guests.forEach(guest => {
-        const qrData = JSON.stringify({
-            id: guest.id,
-            firstName: guest.firstName,
-            lastName: guest.lastName,
-            ticketCount: guest.ticketCount,
-            eventId: currentEventId
-        });
-        
-        // Clear any existing QR code
-        const qrElement = document.getElementById(`qrcode-${guest.id}`);
-        qrElement.innerHTML = '';
-        
-        // Generate new QR code
-        new QRCode(qrElement, {
-            text: qrData,
-            width: 100,
-            height: 100,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-    });
-}
-
-// Function to copy QR data to clipboard
-function copyQRData(guestId) {
-    const events = JSON.parse(localStorage.getItem('events') || '[]');
-    const currentEvent = events.find(event => event.id === currentEventId);
-    const guest = currentEvent.guests.find(g => g.id === guestId);
-
-    if (guest) {
-        const qrData = JSON.stringify({
-            id: guest.id,
-            firstName: guest.firstName,
-            lastName: guest.lastName,
-            ticketCount: guest.ticketCount,
-            eventId: currentEventId
-        });
-
-        navigator.clipboard.writeText(qrData)
-            .then(() => alert('QR data copied to clipboard'))
-            .catch(err => console.error('Failed to copy QR data:', err));
-    }
 } 
