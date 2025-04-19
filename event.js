@@ -222,7 +222,76 @@ function removeGuest(guestId) {
     }
 }
 
-// Function to show QR code
+// Function to generate and download ticket QR code
+function generateTicketQRCode(guestId) {
+    const username = localStorage.getItem('username');
+    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+    const event = events.find(e => e.id === currentEventId);
+    const guest = event.guests.find(g => g.id === guestId);
+
+    if (guest) {
+        // Create ticket data
+        const ticketData = {
+            eventId: currentEventId,
+            eventName: event.name,
+            guestId: guest.id,
+            guestName: guest.name,
+            ticketCount: guest.count
+        };
+
+        // Create QR code container
+        const qrCodeContainer = document.createElement('div');
+        qrCodeContainer.id = 'ticketQRCode';
+        
+        // Generate QR code
+        new QRCode(qrCodeContainer, {
+            text: JSON.stringify(ticketData),
+            width: 256,
+            height: 256,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // Create ticket HTML
+        const ticketHTML = `
+            <div class="bg-white p-8 rounded-lg shadow-lg max-w-md mx-auto">
+                <h2 class="text-2xl font-bold mb-4">${event.name}</h2>
+                <div class="mb-4">
+                    <p class="text-lg"><strong>Guest:</strong> ${guest.name}</p>
+                    <p class="text-lg"><strong>Number of Tickets:</strong> ${guest.count}</p>
+                </div>
+                <div class="flex justify-center mb-4">
+                    ${qrCodeContainer.innerHTML}
+                </div>
+                <p class="text-sm text-gray-500 text-center">Scan this QR code at the event entrance</p>
+            </div>
+        `;
+
+        // Create a new window with the ticket
+        const ticketWindow = window.open('', '_blank');
+        ticketWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Event Ticket - ${guest.name}</title>
+                <script src="https://cdn.tailwindcss.com"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+            </head>
+            <body class="bg-gray-100 p-8">
+                ${ticketHTML}
+                <div class="text-center mt-4">
+                    <button onclick="window.print()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                        Print Ticket
+                    </button>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+}
+
+// Function to show QR code modal
 function showQRCode(eventId, guestId) {
     const username = localStorage.getItem('username');
     const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
@@ -230,18 +299,21 @@ function showQRCode(eventId, guestId) {
     const guest = event.guests.find(g => g.id === guestId);
 
     if (guest) {
-        const qrData = JSON.stringify({
+        // Create ticket data
+        const ticketData = {
             eventId: eventId,
-            guestId: guestId,
-            guestName: guest.name
-        });
+            eventName: event.name,
+            guestId: guest.id,
+            guestName: guest.name,
+            ticketCount: guest.count
+        };
 
         const qrCodeContainer = document.getElementById('qrCodeContainer');
         qrCodeContainer.innerHTML = '';
         
-        // Create new QR code
+        // Generate QR code
         new QRCode(qrCodeContainer, {
-            text: qrData,
+            text: JSON.stringify(ticketData),
             width: 200,
             height: 200,
             colorDark: '#000000',
@@ -262,7 +334,7 @@ function closeQRCodeModal() {
 function saveQRCode() {
     const canvas = document.querySelector('#qrCodeContainer canvas');
     const link = document.createElement('a');
-    link.download = 'guest-qr-code.png';
+    link.download = 'guest-ticket.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
 } 
