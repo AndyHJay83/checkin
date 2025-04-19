@@ -6,7 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Function to create a new event
-function createEvent() {
+function createEvent(event) {
+    // Prevent default form submission if event exists
+    if (event) {
+        event.preventDefault();
+    }
+
     const eventName = document.getElementById('newEventName').value.trim();
     console.log('Creating event with name:', eventName);
     
