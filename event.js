@@ -188,6 +188,14 @@ function loadGuests() {
                         class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                     Show QR
                 </button>
+                <button onclick="editGuest('${guest.id}')" 
+                        class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
+                    Edit
+                </button>
+                <button onclick="removeGuest('${guest.id}')" 
+                        class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+                    Remove
+                </button>
             </div>
         </div>
     `).join('');
