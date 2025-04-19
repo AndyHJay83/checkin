@@ -27,11 +27,24 @@
             <div class="flex items-center justify-center min-h-screen">
                 <div class="bg-white p-6 rounded-lg shadow-lg w-96">
                     <h2 class="text-xl font-semibold mb-4">Add Guest</h2>
-                    <input type="text" 
-                           id="guestNameInput" 
-                           placeholder="Enter guest name" 
-                           class="w-full p-2 border rounded-md mb-4">
-                    <div class="flex justify-end space-x-2">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="guestNameInput" class="block text-sm font-medium text-gray-700">Guest Name</label>
+                            <input type="text" 
+                                   id="guestNameInput" 
+                                   placeholder="Enter guest name" 
+                                   class="w-full p-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="guestCountInput" class="block text-sm font-medium text-gray-700">Number of Guests</label>
+                            <input type="number" 
+                                   id="guestCountInput" 
+                                   min="1" 
+                                   value="1"
+                                   class="w-full p-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-2 mt-4">
                         <button id="cancelAddGuest" 
                                 class="px-4 py-2 text-gray-600 hover:text-gray-800">
                             Cancel
