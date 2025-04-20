@@ -7,7 +7,9 @@ if (!token) {
 }
 
 // API configuration
-const API_URL = 'http://localhost:3000/api';
+const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api'
+    : 'https://andyjay.github.io/checkin/api';
 
 // Load events when page loads
 document.addEventListener('DOMContentLoaded', loadEvents);
