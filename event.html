@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-    <link href="styles.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body {
             background-color: #e6f7e6;  /* Pastel green background */
@@ -55,25 +54,13 @@
 
     <!-- QR Code Modal -->
     <div id="qrCodeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
-        <div class="fixed inset-0 flex items-center justify-center">
-            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                <h3 class="text-xl font-semibold mb-4">Guest QR Code</h3>
-                <div id="qrCodeContainer" class="mb-4 flex justify-center"></div>
-                <div class="text-sm text-gray-600 mb-4">
-                    <p>This QR code contains the guest's check-in information. You can:</p>
-                    <ul class="list-disc list-inside mt-2">
-                        <li>Save the QR code as an image</li>
-                        <li>Send it to the guest via email</li>
-                        <li>Print it for physical tickets</li>
-                    </ul>
-                </div>
-                <div class="flex justify-end space-x-4">
-                    <button onclick="closeQRCodeModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
-                        Close
-                    </button>
-                    <button onclick="saveQRCode()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                        Save QR Code
-                    </button>
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white p-8 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4">Guest QR Code</h2>
+                <div id="qrCodeContainer" class="mb-4"></div>
+                <div class="flex justify-end space-x-2">
+                    <button onclick="closeQRCodeModal()" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Close</button>
+                    <button onclick="saveQRCode()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Save QR Code</button>
                 </div>
             </div>
         </div>
