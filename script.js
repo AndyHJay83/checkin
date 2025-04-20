@@ -1,5 +1,4 @@
 let html5QrcodeScanner = null;
-const API_URL = 'https://andyjay.github.io/checkin/api';
 
 // Function to start scanning
 async function startScanning() {
@@ -32,11 +31,11 @@ async function startScanning() {
 }
 
 // Function to handle successful scan
-async function onScanSuccess(decodedText, decodedResult) {
+function onScanSuccess(decodedText, decodedResult) {
     try {
         const guestData = JSON.parse(decodedText);
         showGuestInfo(guestData);
-        await updateGuestStatus(guestData);
+        updateGuestStatus(guestData);
         
         // Stop scanning after successful scan
         if (html5QrcodeScanner) {
@@ -83,49 +82,21 @@ function closeModal() {
     modal.classList.remove('flex');
 }
 
-// Function to update guest status in the API
-async function updateGuestStatus(guestData) {
-    try {
-        const username = localStorage.getItem('username');
-        if (!username) {
-            throw new Error('User not logged in');
+// Function to update guest status in localStorage
+function updateGuestStatus(guestData) {
+    let events = JSON.parse(localStorage.getItem('events') || '[]');
+    events = events.map(event => {
+        if (event.id === guestData.eventId) {
+            event.guests = event.guests.map(guest => {
+                if (guest.id === guestData.id) {
+                    return { ...guest, checkedIn: true };
+                }
+                return guest;
+            });
         }
-
-        // Get current events
-        const response = await fetch(`${API_URL}/events/${username}`);
-        if (!response.ok) throw new Error('Failed to load events');
-        const events = await response.json();
-        
-        // Find the event and update the guest's check-in status
-        const event = events.find(e => e.id === guestData.eventId);
-        if (!event) throw new Error('Event not found');
-        
-        const guest = event.guests.find(g => g.id === guestData.id);
-        if (!guest) throw new Error('Guest not found');
-        
-        // Update guest status
-        guest.checkedIn = true;
-        
-        // Save updated event
-        const saveResponse = await fetch(`${API_URL}/event`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                username,
-                event
-            }),
-        });
-        
-        if (!saveResponse.ok) throw new Error('Failed to save event');
-        
-        // Show success message
-        alert('Guest checked in successfully!');
-    } catch (error) {
-        console.error('Error updating guest status:', error);
-        alert('Failed to update guest status');
-    }
+        return event;
+    });
+    localStorage.setItem('events', JSON.stringify(events));
 }
 
 // Start scanning when the page loads
