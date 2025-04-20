@@ -2,24 +2,20 @@
 let currentEventId = null;
 let editingGuestId = null;
 
-// API Configuration
-const API_URL = 'https://andyjay.github.io/checkin/api';
+// Check if user is logged in
+const token = localStorage.getItem('token');
+if (!token) {
+    window.location.href = 'index.html';
+}
+
+// API configuration
+const API_URL = 'http://localhost:3000/api';
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if user is logged in
-    if (!localStorage.getItem('isLoggedIn')) {
-        window.location.href = 'login.html';
-        return;
-    }
-
-    const username = localStorage.getItem('username');
-    console.log('Current username:', username);
-
     // Get event ID from URL
     const urlParams = new URLSearchParams(window.location.search);
-    currentEventId = urlParams.get('id');
-    console.log('Current event ID:', currentEventId);
+    currentEventId = urlParams.get('eventId');
 
     if (!currentEventId) {
         window.location.href = 'settings.html';
@@ -118,70 +114,70 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Function to load event details
-function loadEventDetails() {
-    const username = localStorage.getItem('username');
-    const urlParams = new URLSearchParams(window.location.search);
-    const eventId = urlParams.get('id');
-
-    if (!eventId) {
-        window.location.href = 'settings.html';
-        return;
-    }
-
-    fetch(`${API_URL}/events/${username}/${eventId}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load event details');
+async function loadEventDetails() {
+    try {
+        const response = await fetch(`${API_URL}/events`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
             }
-            return response.json();
-        })
-        .then(event => {
-            const eventTitle = document.getElementById('eventTitle');
-            if (eventTitle) {
-                eventTitle.textContent = event.name;
-            }
-            loadGuests();
-        })
-        .catch(error => {
-            console.error('Error loading event details:', error);
-            alert('Failed to load event details');
         });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load events');
+        }
+        
+        const events = await response.json();
+        const event = events.find(e => e.id === currentEventId);
+        
+        if (!event) {
+            throw new Error('Event not found');
+        }
+        
+        document.getElementById('eventTitle').textContent = event.name;
+        loadGuests(event.guests || []);
+    } catch (error) {
+        console.error('Error loading event details:', error);
+        alert('Error loading event details. Please try again.');
+    }
 }
 
 // Function to load guests
-function loadGuests() {
-    const username = localStorage.getItem('username');
-    const urlParams = new URLSearchParams(window.location.search);
-    const eventId = urlParams.get('id');
-
-    fetch(`${API_URL}/events/${username}/${eventId}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load guests');
-            }
-            return response.json();
-        })
-        .then(event => {
-            const guestsList = document.getElementById('guestsList');
-            if (!event.guests || event.guests.length === 0) {
-                guestsList.innerHTML = '<p class="text-gray-500">No guests added yet</p>';
-                return;
-            }
-
-            guestsList.innerHTML = event.guests.map(guest => `
-                <div class="border rounded-md p-4 ${guest.checkedIn ? 'bg-green-50' : ''}">
-                    <h3 class="font-semibold">${guest.firstName} ${guest.lastName}</h3>
-                    <p class="text-sm text-gray-600">${guest.ticketCount} ticket(s)</p>
-                    <p class="text-sm ${guest.checkedIn ? 'text-green-600' : 'text-gray-600'}">
+function loadGuests(guests) {
+    const guestsList = document.getElementById('guestsList');
+    guestsList.innerHTML = '';
+    
+    if (guests.length === 0) {
+        guestsList.innerHTML = '<p class="text-gray-500">No guests added yet</p>';
+        return;
+    }
+    
+    guests.forEach(guest => {
+        const guestCard = document.createElement('div');
+        guestCard.className = 'bg-white p-4 rounded-lg shadow mb-4';
+        guestCard.innerHTML = `
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-semibold">${guest.firstName} ${guest.lastName}</h3>
+                    <p class="text-gray-600">${guest.ticketCount} ticket(s)</p>
+                    <p class="text-sm ${guest.checkedIn ? 'text-green-500' : 'text-red-500'}">
                         ${guest.checkedIn ? 'Checked In' : 'Not Checked In'}
                     </p>
                 </div>
-            `).join('');
-        })
-        .catch(error => {
-            console.error('Error loading guests:', error);
-            guestsList.innerHTML = '<p class="text-red-500">Failed to load guests</p>';
-        });
+                <div class="flex space-x-2">
+                    <button onclick="showQRCode('${guest.id}')" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        Show QR
+                    </button>
+                    <button onclick="editGuest('${guest.id}')" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
+                        Edit
+                    </button>
+                    <button onclick="deleteGuest('${guest.id}')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        `;
+        guestsList.appendChild(guestCard);
+    });
 }
 
 // Function to edit a guest
@@ -230,50 +226,33 @@ function removeGuest(guestId) {
 }
 
 // Function to show QR code
-function showQRCode(guestData) {
-    const modal = document.getElementById('qrCodeModal');
-    const qrCodeContainer = document.getElementById('qrCodeContainer');
+function showQRCode(guestId) {
+    const guest = currentEvent.guests.find(g => g.id === guestId);
+    if (!guest) return;
     
-    // Get event data
-    const username = localStorage.getItem('username');
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
-    const event = events.find(e => e.id === currentEventId);
-    
-    if (!event) {
-        console.error('Event not found');
-        return;
-    }
-    
-    // Create QR data with the structure expected by script.js
-    const qrData = {
-        eventId: event.id,
-        id: guestData.id,
-        firstName: guestData.name.split(' ')[0],
-        lastName: guestData.name.split(' ').slice(1).join(' '),
-        ticketCount: guestData.count
-    };
-    
-    // Clear previous QR code
-    qrCodeContainer.innerHTML = '';
-    
-    // Create QR code with combined data
-    new QRCode(qrCodeContainer, {
-        text: JSON.stringify(qrData),
-        width: 256,
-        height: 256,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
+    const qrData = JSON.stringify({
+        eventId,
+        guestId,
+        firstName: guest.firstName,
+        lastName: guest.lastName,
+        ticketCount: guest.ticketCount
     });
     
-    // Show modal
-    modal.classList.remove('hidden');
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    qrCodeContainer.innerHTML = '';
+    
+    new QRCode(qrCodeContainer, {
+        text: qrData,
+        width: 256,
+        height: 256
+    });
+    
+    document.getElementById('qrCodeModal').classList.remove('hidden');
 }
 
 // Function to close QR code modal
 function closeQRCodeModal() {
-    const modal = document.getElementById('qrCodeModal');
-    modal.classList.add('hidden');
+    document.getElementById('qrCodeModal').classList.add('hidden');
 }
 
 // Function to save QR code
@@ -281,61 +260,14 @@ function saveQRCode() {
     const qrCodeContainer = document.getElementById('qrCodeContainer');
     const canvas = qrCodeContainer.querySelector('canvas');
     
-    // Create a temporary link to download the QR code
     const link = document.createElement('a');
     link.download = 'guest-qr-code.png';
-    link.href = canvas.toDataURL('image/png');
+    link.href = canvas.toDataURL();
     link.click();
 }
 
-// Handle add guest button click
-function handleAddGuest() {
-    const firstName = document.getElementById('firstName')?.value.trim();
-    const lastName = document.getElementById('lastName')?.value.trim();
-    const ticketCount = parseInt(document.getElementById('ticketCount')?.value || '0');
-    
-    if (!firstName || !lastName) {
-        alert('Please enter both first and last name');
-        return;
-    }
-    
-    if (isNaN(ticketCount) || ticketCount < 1) {
-        alert('Please enter a valid number of tickets (minimum 1)');
-        return;
-    }
-
-    const username = localStorage.getItem('username');
-    const urlParams = new URLSearchParams(window.location.search);
-    const eventId = urlParams.get('id');
-
-    const newGuest = {
-        id: Date.now().toString(),
-        firstName,
-        lastName,
-        ticketCount,
-        checkedIn: false
-    };
-
-    fetch(`${API_URL}/events/${username}/${eventId}/guests`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newGuest)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to add guest');
-        }
-        // Clear form
-        document.getElementById('firstName').value = '';
-        document.getElementById('lastName').value = '';
-        document.getElementById('ticketCount').value = '1';
-        // Refresh guests list
-        loadGuests();
-    })
-    .catch(error => {
-        console.error('Error adding guest:', error);
-        alert('Error adding guest. Please try again.');
-    });
+// Function to logout
+function logout() {
+    localStorage.removeItem('token');
+    window.location.href = 'index.html';
 } 

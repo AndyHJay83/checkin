@@ -1,167 +1,137 @@
 let currentEventId = null;
 
-// Check authentication on page load
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if user is logged in
-    if (!localStorage.getItem('isLoggedIn')) {
-        window.location.href = 'login.html';
+// Check if user is logged in
+const token = localStorage.getItem('token');
+if (!token) {
+    window.location.href = 'index.html';
+}
+
+// API configuration
+const API_URL = 'http://localhost:3000/api';
+
+// Load events when page loads
+document.addEventListener('DOMContentLoaded', loadEvents);
+
+// Function to load events
+async function loadEvents() {
+    try {
+        const response = await fetch(`${API_URL}/events`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load events');
+        }
+        
+        const events = await response.json();
+        const eventsList = document.getElementById('eventsList');
+        eventsList.innerHTML = '';
+        
+        if (events.length === 0) {
+            eventsList.innerHTML = '<p class="text-gray-500">No events found. Create your first event!</p>';
+            return;
+        }
+        
+        events.forEach(event => {
+            const eventCard = document.createElement('div');
+            eventCard.className = 'bg-white p-4 rounded-lg shadow mb-4';
+            eventCard.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold">${event.name}</h3>
+                        <p class="text-gray-600">${event.guests?.length || 0} guests</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="manageGuests('${event.id}')" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                            Manage Guests
+                        </button>
+                        <button onclick="deleteEvent('${event.id}')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+            eventsList.appendChild(eventCard);
+        });
+    } catch (error) {
+        console.error('Error loading events:', error);
+        document.getElementById('eventsList').innerHTML = '<p class="text-red-500">Error loading events. Please try again.</p>';
+    }
+}
+
+// Function to create a new event
+async function createEvent() {
+    const eventName = document.getElementById('eventName').value.trim();
+    if (!eventName) {
+        alert('Please enter an event name');
         return;
     }
-
-    // Initialize localStorage with empty events array if it doesn't exist
-    const username = localStorage.getItem('username');
-    if (!localStorage.getItem(`events_${username}`)) {
-        localStorage.setItem(`events_${username}`, JSON.stringify([]));
-    }
-
-    // Add event listeners
-    const createEventBtn = document.getElementById('createEventBtn');
-    const cancelCreateEvent = document.getElementById('cancelCreateEvent');
-    const confirmCreateEvent = document.getElementById('confirmCreateEvent');
-    const createEventModal = document.getElementById('createEventModal');
-
-    // Show create event modal
-    if (createEventBtn) {
-        createEventBtn.onclick = function() {
-            createEventModal.classList.remove('hidden');
-        };
-    }
-
-    // Hide create event modal
-    if (cancelCreateEvent) {
-        cancelCreateEvent.onclick = function() {
-            createEventModal.classList.add('hidden');
-        };
-    }
-
-    // Handle event creation
-    if (confirmCreateEvent) {
-        confirmCreateEvent.onclick = function() {
-            const eventName = document.getElementById('eventNameInput').value.trim();
-            
-            if (!eventName) {
-                alert('Please enter an event name');
-                return;
-            }
-
-            const username = localStorage.getItem('username');
-            const newEvent = {
+    
+    try {
+        const response = await fetch(`${API_URL}/events`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
                 id: Date.now().toString(),
                 name: eventName,
                 guests: []
-            };
-
-            fetch(`${API_CONFIG.baseUrl}/events/${username}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(newEvent)
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to create event');
-                }
-                // Clear input and hide modal
-                document.getElementById('eventNameInput').value = '';
-                createEventModal.classList.add('hidden');
-                // Refresh events list
-                loadEvents();
-            })
-            .catch(error => {
-                console.error('Error creating event:', error);
-                alert('Error creating event. Please try again.');
-            });
-        };
-    }
-
-    // Load existing events
-    loadEvents();
-});
-
-// Function to handle logout
-function logout() {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('username');
-    window.location.href = 'login.html';
-}
-
-// API Configuration
-const API_CONFIG = {
-    // For GitHub Pages deployment
-    baseUrl: '/api'
-};
-
-// Function to load all events
-function loadEvents() {
-    const eventsList = document.getElementById('eventsList');
-    const username = localStorage.getItem('username');
-    
-    // Fetch events from API
-    fetch(`${API_CONFIG.baseUrl}/events/${username}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load events');
-            }
-            return response.json();
-        })
-        .then(events => {
-            if (events.length === 0) {
-                eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
-                return;
-            }
-
-            eventsList.innerHTML = events.map(event => `
-                <div class="bg-white p-4 rounded-lg shadow mb-4">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="text-lg font-semibold">${event.name}</h3>
-                            <p class="text-sm text-gray-600">${event.guests.length} guest(s)</p>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button onclick="window.location.href='event.html?id=${event.id}'" 
-                                    class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
-                                Manage Guests
-                            </button>
-                            <button onclick="deleteEvent('${event.id}')" 
-                                    class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        })
-        .catch(error => {
-            console.error('Error loading events:', error);
-            eventsList.innerHTML = '<p class="text-red-500">Failed to load events</p>';
         });
+        
+        if (!response.ok) {
+            throw new Error('Failed to create event');
+        }
+        
+        document.getElementById('eventName').value = '';
+        loadEvents();
+    } catch (error) {
+        console.error('Error creating event:', error);
+        alert('Error creating event. Please try again.');
+    }
 }
 
 // Function to delete an event
-function deleteEvent(eventId) {
-    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+async function deleteEvent(eventId) {
+    if (!confirm('Are you sure you want to delete this event?')) {
         return;
     }
-
-    const username = localStorage.getItem('username');
     
-    fetch(`${API_CONFIG.baseUrl}/events/${username}/${eventId}`, {
-        method: 'DELETE'
-    })
-    .then(response => {
+    try {
+        const response = await fetch(`${API_URL}/events/${eventId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
         if (!response.ok) {
             throw new Error('Failed to delete event');
         }
+        
         loadEvents();
-    })
-    .catch(error => {
+    } catch (error) {
         console.error('Error deleting event:', error);
         alert('Error deleting event. Please try again.');
-    });
+    }
 }
 
-// Handle add guest button click
+// Function to manage guests
+function manageGuests(eventId) {
+    window.location.href = `event.html?eventId=${eventId}`;
+}
+
+// Function to logout
+function logout() {
+    localStorage.removeItem('token');
+    window.location.href = 'index.html';
+}
+
+// Function to handle add guest button click
 function handleAddGuest() {
     if (!currentEventId) {
         alert('Please select an event first');
