@@ -28,24 +28,22 @@
         </button>
 
         <!-- Create Event Modal -->
-        <div id="createEventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden">
-            <div class="flex items-center justify-center min-h-screen">
-                <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-                    <h2 class="text-xl font-semibold mb-4 text-dark-green">Create New Event</h2>
-                    <input type="text" 
-                           id="eventNameInput" 
-                           placeholder="Enter event name" 
-                           class="w-full p-2 border border-gray-300 rounded-md mb-4 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-dark-green">
-                    <div class="flex justify-end space-x-2">
-                        <button id="cancelCreateEvent" 
-                                class="px-4 py-2 text-gray-600 hover:text-gray-800">
-                            Cancel
-                        </button>
-                        <button id="confirmCreateEvent" 
-                                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-                            Create
-                        </button>
-                    </div>
+        <div id="createEventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h2 class="text-xl font-semibold mb-4 text-dark-green">Create New Event</h2>
+                <input type="text" 
+                       id="eventNameInput" 
+                       placeholder="Enter event name" 
+                       class="w-full p-2 border border-gray-300 rounded-md mb-4 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-dark-green">
+                <div class="flex justify-end space-x-2">
+                    <button id="cancelCreateEvent" 
+                            class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                        Cancel
+                    </button>
+                    <button id="confirmCreateEvent" 
+                            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                        Create
+                    </button>
                 </div>
             </div>
         </div>

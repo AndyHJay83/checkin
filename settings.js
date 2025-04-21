@@ -53,28 +53,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         const cancelCreateEvent = document.getElementById('cancelCreateEvent');
         const confirmCreateEvent = document.getElementById('confirmCreateEvent');
         const createEventModal = document.getElementById('createEventModal');
+        const eventNameInput = document.getElementById('eventNameInput');
         const deleteEventModal = document.getElementById('deleteEventModal');
         const cancelDeleteEvent = document.getElementById('cancelDeleteEvent');
         const confirmDeleteEvent = document.getElementById('confirmDeleteEvent');
 
         // Show create event modal
         if (createEventBtn) {
-            createEventBtn.onclick = function() {
+            createEventBtn.addEventListener('click', () => {
                 createEventModal.classList.remove('hidden');
-            };
+                eventNameInput.focus();
+            });
         }
 
         // Hide create event modal
         if (cancelCreateEvent) {
-            cancelCreateEvent.onclick = function() {
+            cancelCreateEvent.addEventListener('click', () => {
                 createEventModal.classList.add('hidden');
-            };
+                eventNameInput.value = '';
+            });
         }
 
         // Handle event creation
         if (confirmCreateEvent) {
-            confirmCreateEvent.onclick = async function() {
-                const eventName = document.getElementById('eventNameInput').value.trim();
+            confirmCreateEvent.addEventListener('click', async () => {
+                const eventName = eventNameInput.value.trim();
                 
                 if (!eventName) {
                     alert('Please enter an event name');
@@ -95,15 +98,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     await saveEvents(events);
 
                     // Clear input and hide modal
-                    document.getElementById('eventNameInput').value = '';
+                    eventNameInput.value = '';
                     createEventModal.classList.add('hidden');
 
                     // Refresh events list
                     loadEvents(events);
                 } catch (error) {
+                    console.error('Error creating event:', error);
                     alert('Error creating event. Please try again.');
                 }
-            };
+            });
         }
 
         // Hide delete event modal
