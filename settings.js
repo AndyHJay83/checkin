@@ -2,34 +2,86 @@ let currentEventId = null;
 let eventToDelete = null;
 
 // GitHub API Configuration
-const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN'; // This should be set in your environment
 const REPO_OWNER = 'andyjay83';
 const REPO_NAME = 'checkin';
 const DATA_FILE = 'events.json';
 
-// Function to fetch events from serverless function
+// Function to get the GitHub token
+function getGitHubToken() {
+    const token = localStorage.getItem('github_token');
+    if (!token) {
+        alert('Please set your GitHub token in the settings');
+        return null;
+    }
+    return token;
+}
+
+// Function to fetch events from GitHub
 async function fetchEvents() {
+    const token = getGitHubToken();
+    if (!token) return [];
+
     try {
-        const response = await fetch('http://localhost:3001/api/events');
+        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
+            headers: {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
         if (!response.ok) {
+            if (response.status === 404) {
+                // File doesn't exist yet, return empty array
+                return [];
+            }
             throw new Error('Failed to fetch events');
         }
-        return await response.json();
+
+        const data = await response.json();
+        const content = atob(data.content);
+        return JSON.parse(content);
     } catch (error) {
         console.error('Error fetching events:', error);
         return [];
     }
 }
 
-// Function to save events using serverless function
+// Function to save events using GitHub API
 async function saveEvents(events) {
+    const token = getGitHubToken();
+    if (!token) return;
+
     try {
-        const response = await fetch('http://localhost:3001/api/events', {
-            method: 'POST',
+        // First, get the current file's SHA if it exists
+        let sha = null;
+        try {
+            const getResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            if (getResponse.ok) {
+                const data = await getResponse.json();
+                sha = data.sha;
+            }
+        } catch (error) {
+            console.log('File does not exist yet');
+        }
+
+        // Create or update the file
+        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
+            method: 'PUT',
             headers: {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(events)
+            body: JSON.stringify({
+                message: 'Update events data',
+                content: btoa(JSON.stringify(events)),
+                sha: sha
+            })
         });
 
         if (!response.ok) {
@@ -44,6 +96,23 @@ async function saveEvents(events) {
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // Load saved token if it exists
+        const savedToken = localStorage.getItem('github_token');
+        if (savedToken) {
+            document.getElementById('githubToken').value = savedToken;
+        }
+
+        // Add token save handler
+        document.getElementById('saveTokenBtn').addEventListener('click', () => {
+            const token = document.getElementById('githubToken').value.trim();
+            if (token) {
+                localStorage.setItem('github_token', token);
+                alert('GitHub token saved successfully');
+            } else {
+                alert('Please enter a valid GitHub token');
+            }
+        });
+
         // Load existing events
         const events = await fetchEvents();
         loadEvents(events);
