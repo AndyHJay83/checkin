@@ -4,11 +4,6 @@ let editingGuestId = null;
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-    if (!checkLoginStatus()) {
-        redirectToLogin();
-        return;
-    }
-
     const urlParams = new URLSearchParams(window.location.search);
     currentEventId = urlParams.get('id');
     
@@ -188,39 +183,21 @@ function displayGuest(guest) {
 
 // Storage functions
 function saveGuests(guests) {
-    const username = localStorage.getItem('currentUser');
-    if (!username) return;
-    
     const events = getEvents();
     const eventIndex = events.findIndex(e => e.id === currentEventId);
     if (eventIndex === -1) return;
     
     events[eventIndex].guests = guests;
-    localStorage.setItem(`events_${username}`, JSON.stringify(events));
+    localStorage.setItem('events', JSON.stringify(events));
 }
 
 function getGuests() {
-    const username = localStorage.getItem('currentUser');
-    if (!username) return [];
-    
     const events = getEvents();
     const event = events.find(e => e.id === currentEventId);
     return event ? event.guests || [] : [];
 }
 
 function getEvents() {
-    const username = localStorage.getItem('currentUser');
-    if (!username) return [];
-    
-    const events = localStorage.getItem(`events_${username}`);
+    const events = localStorage.getItem('events');
     return events ? JSON.parse(events) : [];
-}
-
-// Auth functions
-function checkLoginStatus() {
-    return localStorage.getItem('currentUser') !== null;
-}
-
-function redirectToLogin() {
-    window.location.href = 'login.html';
 } 
