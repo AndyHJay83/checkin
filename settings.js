@@ -1,97 +1,179 @@
 let currentEventId = null;
 let eventToDelete = null;
 
-// Initialize page
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize localStorage with empty events array if it doesn't exist
-    if (!localStorage.getItem('events')) {
-        localStorage.setItem('events', JSON.stringify([]));
-    }
+// GitHub API Configuration
+const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN'; // Replace with your GitHub token
+const REPO_OWNER = 'YOUR_GITHUB_USERNAME'; // Replace with your GitHub username
+const REPO_NAME = 'checkin'; // Replace with your repository name
+const DATA_FILE = 'events.json';
 
-    // Add event listeners
-    const createEventBtn = document.getElementById('createEventBtn');
-    const cancelCreateEvent = document.getElementById('cancelCreateEvent');
-    const confirmCreateEvent = document.getElementById('confirmCreateEvent');
-    const createEventModal = document.getElementById('createEventModal');
-    const deleteEventModal = document.getElementById('deleteEventModal');
-    const cancelDeleteEvent = document.getElementById('cancelDeleteEvent');
-    const confirmDeleteEvent = document.getElementById('confirmDeleteEvent');
-
-    // Show create event modal
-    if (createEventBtn) {
-        createEventBtn.onclick = function() {
-            createEventModal.classList.remove('hidden');
-        };
-    }
-
-    // Hide create event modal
-    if (cancelCreateEvent) {
-        cancelCreateEvent.onclick = function() {
-            createEventModal.classList.add('hidden');
-        };
-    }
-
-    // Handle event creation
-    if (confirmCreateEvent) {
-        confirmCreateEvent.onclick = function() {
-            const eventName = document.getElementById('eventNameInput').value.trim();
-            
-            if (!eventName) {
-                alert('Please enter an event name');
-                return;
+// Function to fetch events from GitHub
+async function fetchEvents() {
+    try {
+        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json'
             }
+        });
+        
+        if (response.status === 404) {
+            // File doesn't exist yet, return empty array
+            return [];
+        }
+        
+        const data = await response.json();
+        const content = atob(data.content);
+        return JSON.parse(content);
+    } catch (error) {
+        console.error('Error fetching events:', error);
+        return [];
+    }
+}
 
-            // Create new event
-            const newEvent = {
-                id: Date.now().toString(),
-                name: eventName,
-                guests: []
+// Function to save events to GitHub
+async function saveEvents(events) {
+    try {
+        // First, get the current file SHA if it exists
+        let sha;
+        try {
+            const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                sha = data.sha;
+            }
+        } catch (error) {
+            console.log('File does not exist yet');
+        }
+
+        // Create or update the file
+        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: 'Update events data',
+                content: btoa(JSON.stringify(events)),
+                sha: sha
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save events');
+        }
+    } catch (error) {
+        console.error('Error saving events:', error);
+        throw error;
+    }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Load existing events
+        const events = await fetchEvents();
+        loadEvents(events);
+
+        // Add event listeners
+        const createEventBtn = document.getElementById('createEventBtn');
+        const cancelCreateEvent = document.getElementById('cancelCreateEvent');
+        const confirmCreateEvent = document.getElementById('confirmCreateEvent');
+        const createEventModal = document.getElementById('createEventModal');
+        const deleteEventModal = document.getElementById('deleteEventModal');
+        const cancelDeleteEvent = document.getElementById('cancelDeleteEvent');
+        const confirmDeleteEvent = document.getElementById('confirmDeleteEvent');
+
+        // Show create event modal
+        if (createEventBtn) {
+            createEventBtn.onclick = function() {
+                createEventModal.classList.remove('hidden');
             };
+        }
 
-            // Get existing events and add new event
-            const events = JSON.parse(localStorage.getItem('events') || '[]');
-            events.push(newEvent);
-            localStorage.setItem('events', JSON.stringify(events));
+        // Hide create event modal
+        if (cancelCreateEvent) {
+            cancelCreateEvent.onclick = function() {
+                createEventModal.classList.add('hidden');
+            };
+        }
 
-            // Clear input and hide modal
-            document.getElementById('eventNameInput').value = '';
-            createEventModal.classList.add('hidden');
+        // Handle event creation
+        if (confirmCreateEvent) {
+            confirmCreateEvent.onclick = async function() {
+                const eventName = document.getElementById('eventNameInput').value.trim();
+                
+                if (!eventName) {
+                    alert('Please enter an event name');
+                    return;
+                }
 
-            // Refresh events list
-            loadEvents();
-        };
-    }
+                try {
+                    // Create new event
+                    const newEvent = {
+                        id: Date.now().toString(),
+                        name: eventName,
+                        guests: []
+                    };
 
-    // Hide delete event modal
-    if (cancelDeleteEvent) {
-        cancelDeleteEvent.onclick = function() {
-            deleteEventModal.classList.add('hidden');
-            eventToDelete = null;
-        };
-    }
+                    // Get existing events and add new event
+                    const events = await fetchEvents();
+                    events.push(newEvent);
+                    await saveEvents(events);
 
-    // Handle event deletion
-    if (confirmDeleteEvent) {
-        confirmDeleteEvent.onclick = function() {
-            if (eventToDelete) {
-                const events = JSON.parse(localStorage.getItem('events') || '[]');
-                const updatedEvents = events.filter(event => event.id !== eventToDelete);
-                localStorage.setItem('events', JSON.stringify(updatedEvents));
+                    // Clear input and hide modal
+                    document.getElementById('eventNameInput').value = '';
+                    createEventModal.classList.add('hidden');
+
+                    // Refresh events list
+                    loadEvents(events);
+                } catch (error) {
+                    alert('Error creating event. Please try again.');
+                }
+            };
+        }
+
+        // Hide delete event modal
+        if (cancelDeleteEvent) {
+            cancelDeleteEvent.onclick = function() {
                 deleteEventModal.classList.add('hidden');
                 eventToDelete = null;
-                loadEvents();
-            }
-        };
-    }
+            };
+        }
 
-    // Load existing events
-    loadEvents();
+        // Handle event deletion
+        if (confirmDeleteEvent) {
+            confirmDeleteEvent.onclick = async function() {
+                if (eventToDelete) {
+                    try {
+                        const events = await fetchEvents();
+                        const updatedEvents = events.filter(event => event.id !== eventToDelete);
+                        await saveEvents(updatedEvents);
+                        deleteEventModal.classList.add('hidden');
+                        eventToDelete = null;
+                        loadEvents(updatedEvents);
+                    } catch (error) {
+                        alert('Error deleting event. Please try again.');
+                    }
+                }
+            };
+        }
+    } catch (error) {
+        console.error('Error initializing page:', error);
+        alert('Error loading events. Please refresh the page.');
+    }
 });
 
 // Function to load all events
-function loadEvents() {
+function loadEvents(events) {
     const eventsList = document.getElementById('eventsList');
-    const events = JSON.parse(localStorage.getItem('events') || '[]');
 
     if (events.length === 0) {
         eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
