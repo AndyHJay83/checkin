@@ -10,7 +10,7 @@ const DATA_FILE = 'events.json';
 // Function to fetch events from serverless function
 async function fetchEvents() {
     try {
-        const response = await fetch('/api/events');
+        const response = await fetch('http://localhost:3001/api/events');
         if (!response.ok) {
             throw new Error('Failed to fetch events');
         }
@@ -24,7 +24,7 @@ async function fetchEvents() {
 // Function to save events using serverless function
 async function saveEvents(events) {
     try {
-        const response = await fetch('/api/events', {
+        const response = await fetch('http://localhost:3001/api/events', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
