@@ -102,8 +102,8 @@ function loadEvents() {
         <div class="bg-white p-4 rounded-md shadow">
             <div class="flex justify-between items-start">
                 <div>
-                    <h3 class="font-semibold">${event.name}</h3>
-                    <p class="text-sm text-gray-600">${event.guests.length} guest(s)</p>
+                    <h3 class="font-semibold text-dark-green">${event.name}</h3>
+                    <p class="text-sm text-dark-green">${event.guests.length} guest(s)</p>
                 </div>
                 <div class="flex space-x-2">
                     <button onclick="window.location.href='event.html?id=${event.id}'" 
