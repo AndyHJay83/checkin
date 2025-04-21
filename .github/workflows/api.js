@@ -1,13 +1,11 @@
 // This is a serverless function that will handle GitHub API requests
-import { getToken } from './token.js';
-
 export default async function handler(req, res) {
     const { method, body } = req;
     const REPO_OWNER = 'andyjay83';
     const REPO_NAME = 'checkin';
     const DATA_FILE = 'events.json';
 
-    const token = getToken();
+    const token = process.env.CHECKIN_TOKEN;
     if (!token) {
         res.status(500).json({ error: 'GitHub token not configured' });
         return;
