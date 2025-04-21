@@ -1,12 +1,14 @@
 // This is a serverless function that will handle GitHub API requests
+import { getToken } from './token.js';
+
 export default async function handler(req, res) {
     const { method, body } = req;
-    const GITHUB_TOKEN = process.env.CHECKIN_TOKEN;
     const REPO_OWNER = 'andyjay83';
     const REPO_NAME = 'checkin';
     const DATA_FILE = 'events.json';
 
-    if (!GITHUB_TOKEN) {
+    const token = getToken();
+    if (!token) {
         res.status(500).json({ error: 'GitHub token not configured' });
         return;
     }
@@ -16,7 +18,7 @@ export default async function handler(req, res) {
             case 'GET':
                 const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
                     headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Authorization': `token ${token}`,
                         'Accept': 'application/vnd.github.v3+json'
                     }
                 });
@@ -36,7 +38,7 @@ export default async function handler(req, res) {
                 try {
                     const getResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
                         headers: {
-                            'Authorization': `token ${GITHUB_TOKEN}`,
+                            'Authorization': `token ${token}`,
                             'Accept': 'application/vnd.github.v3+json'
                         }
                     });
@@ -51,7 +53,7 @@ export default async function handler(req, res) {
                 const putResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
                     method: 'PUT',
                     headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Authorization': `token ${token}`,
                         'Accept': 'application/vnd.github.v3+json',
                         'Content-Type': 'application/json'
                     },

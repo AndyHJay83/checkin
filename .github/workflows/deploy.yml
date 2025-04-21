@@ -27,9 +27,9 @@ jobs:
       - name: Copy API file
         run: cp .github/workflows/api.js public/api/index.js
         
-      - name: Create config file
+      - name: Create token handler
         run: |
-          echo "export const config = { CHECKIN_TOKEN: '${{ secrets.CHECKIN_TOKEN }}' };" > public/api/config.js
+          echo "const token = '${{ secrets.CHECKIN_TOKEN }}'; export function getToken() { return token; }" > public/api/token.js
           
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
