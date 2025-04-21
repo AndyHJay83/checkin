@@ -1,87 +1,31 @@
 let currentEventId = null;
 let eventToDelete = null;
 
-// GitHub API Configuration
-const REPO_OWNER = 'andyjay83';
-const REPO_NAME = 'checkin';
-const DATA_FILE = 'events.json';
-
-// Function to get the GitHub token
-function getGitHubToken() {
-    const token = localStorage.getItem('github_token');
-    if (!token) {
-        alert('Please set your GitHub token in the settings');
-        return null;
-    }
-    return token;
-}
-
-// Function to fetch events from GitHub
+// Function to fetch events from the JSON file
 async function fetchEvents() {
-    const token = getGitHubToken();
-    if (!token) return [];
-
     try {
-        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-
+        const response = await fetch('events.json');
         if (!response.ok) {
-            if (response.status === 404) {
-                // File doesn't exist yet, return empty array
-                return [];
-            }
             throw new Error('Failed to fetch events');
         }
-
-        const data = await response.json();
-        const content = atob(data.content);
-        return JSON.parse(content);
+        return await response.json();
     } catch (error) {
         console.error('Error fetching events:', error);
         return [];
     }
 }
 
-// Function to save events using GitHub API
+// Function to save events
 async function saveEvents(events) {
-    const token = getGitHubToken();
-    if (!token) return;
-
     try {
-        // First, get the current file's SHA if it exists
-        let sha = null;
-        try {
-            const getResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            if (getResponse.ok) {
-                const data = await getResponse.json();
-                sha = data.sha;
-            }
-        } catch (error) {
-            console.log('File does not exist yet');
-        }
-
-        // Create or update the file
-        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
+        // In a real application, you would commit this file to your repository
+        // For now, we'll just update the local file
+        const response = await fetch('events.json', {
             method: 'PUT',
             headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                message: 'Update events data',
-                content: btoa(JSON.stringify(events)),
-                sha: sha
-            })
+            body: JSON.stringify(events)
         });
 
         if (!response.ok) {
@@ -96,53 +40,6 @@ async function saveEvents(events) {
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Load saved token if it exists
-        const savedToken = localStorage.getItem('github_token');
-        if (savedToken) {
-            document.getElementById('githubToken').value = savedToken;
-        }
-
-        // Add token save handler
-        const saveTokenBtn = document.getElementById('saveTokenBtn');
-        const githubTokenInput = document.getElementById('githubToken');
-
-        if (saveTokenBtn && githubTokenInput) {
-            saveTokenBtn.addEventListener('click', async () => {
-                const token = githubTokenInput.value.trim();
-                if (!token) {
-                    alert('Please enter a valid GitHub token');
-                    return;
-                }
-
-                try {
-                    // Test the token by making a simple API call
-                    const testResponse = await fetch('https://api.github.com/user', {
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    });
-
-                    if (!testResponse.ok) {
-                        throw new Error('Invalid token');
-                    }
-
-                    // Save the token
-                    localStorage.setItem('github_token', token);
-                    
-                    // Show success message
-                    alert('GitHub token saved successfully! You can now create events.');
-                    
-                    // Try to load events with the new token
-                    const events = await fetchEvents();
-                    loadEvents(events);
-                } catch (error) {
-                    console.error('Error saving token:', error);
-                    alert('Invalid GitHub token. Please check your token and try again.');
-                }
-            });
-        }
-
         // Load existing events
         const events = await fetchEvents();
         loadEvents(events);
