@@ -1,5 +1,5 @@
 // GitHub API Configuration
-const GITHUB_TOKEN = process.env.CHECKIN_TOKEN || 'YOUR_GITHUB_TOKEN'; // Use environment variable or fallback
+const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN'; // This should be set in your environment
 const REPO_OWNER = 'andyjay83';
 const REPO_NAME = 'checkin';
 const DATA_FILE = 'events.json';
