@@ -103,15 +103,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Add token save handler
-        document.getElementById('saveTokenBtn').addEventListener('click', () => {
-            const token = document.getElementById('githubToken').value.trim();
-            if (token) {
-                localStorage.setItem('github_token', token);
-                alert('GitHub token saved successfully');
-            } else {
-                alert('Please enter a valid GitHub token');
-            }
-        });
+        const saveTokenBtn = document.getElementById('saveTokenBtn');
+        const githubTokenInput = document.getElementById('githubToken');
+
+        if (saveTokenBtn && githubTokenInput) {
+            saveTokenBtn.addEventListener('click', async () => {
+                const token = githubTokenInput.value.trim();
+                if (!token) {
+                    alert('Please enter a valid GitHub token');
+                    return;
+                }
+
+                try {
+                    // Test the token by making a simple API call
+                    const testResponse = await fetch('https://api.github.com/user', {
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+
+                    if (!testResponse.ok) {
+                        throw new Error('Invalid token');
+                    }
+
+                    // Save the token
+                    localStorage.setItem('github_token', token);
+                    
+                    // Show success message
+                    alert('GitHub token saved successfully! You can now create events.');
+                    
+                    // Try to load events with the new token
+                    const events = await fetchEvents();
+                    loadEvents(events);
+                } catch (error) {
+                    console.error('Error saving token:', error);
+                    alert('Invalid GitHub token. Please check your token and try again.');
+                }
+            });
+        }
 
         // Load existing events
         const events = await fetchEvents();
