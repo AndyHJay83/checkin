@@ -1,17 +1,10 @@
 let currentEventId = null;
 
-// Check authentication on page load
+// Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if user is logged in
-    if (!localStorage.getItem('isLoggedIn')) {
-        window.location.href = 'login.html';
-        return;
-    }
-
     // Initialize localStorage with empty events array if it doesn't exist
-    const username = localStorage.getItem('username');
-    if (!localStorage.getItem(`events_${username}`)) {
-        localStorage.setItem(`events_${username}`, JSON.stringify([]));
+    if (!localStorage.getItem('events')) {
+        localStorage.setItem('events', JSON.stringify([]));
     }
 
     // Add event listeners
@@ -52,9 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             // Get existing events and add new event
-            const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+            const events = JSON.parse(localStorage.getItem('events') || '[]');
             events.push(newEvent);
-            localStorage.setItem(`events_${username}`, JSON.stringify(events));
+            localStorage.setItem('events', JSON.stringify(events));
 
             // Clear input and hide modal
             document.getElementById('eventNameInput').value = '';
@@ -69,18 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadEvents();
 });
 
-// Function to handle logout
-function logout() {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('username');
-    window.location.href = 'login.html';
-}
-
 // Function to load all events
 function loadEvents() {
     const eventsList = document.getElementById('eventsList');
-    const username = localStorage.getItem('username');
-    const events = JSON.parse(localStorage.getItem(`events_${username}`) || '[]');
+    const events = JSON.parse(localStorage.getItem('events') || '[]');
 
     if (events.length === 0) {
         eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
