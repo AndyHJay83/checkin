@@ -5,26 +5,33 @@ on:
     branches: [ main ]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v2
         with:
-          node-version: '18'
+          node-version: '16'
           
       - name: Install dependencies
         run: npm install
         
       - name: Build
+        run: npm run build
+        
+      - name: Create API directory
+        run: mkdir -p public/api
+        
+      - name: Copy API file
+        run: cp .github/workflows/api.js public/api/index.js
+        
+      - name: Create config file
         run: |
-          mkdir -p public/api
-          cp .github/workflows/api.js public/api/events.js
-          echo "module.exports = { CHECKIN_TOKEN: '${{ secrets.CHECKIN_TOKEN }}' };" > public/api/config.js
+          echo "export const config = { CHECKIN_TOKEN: '${{ secrets.CHECKIN_TOKEN }}' };" > public/api/config.js
           
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

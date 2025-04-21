@@ -6,6 +6,11 @@ export default async function handler(req, res) {
     const REPO_NAME = 'checkin';
     const DATA_FILE = 'events.json';
 
+    if (!GITHUB_TOKEN) {
+        res.status(500).json({ error: 'GitHub token not configured' });
+        return;
+    }
+
     try {
         switch (method) {
             case 'GET':
