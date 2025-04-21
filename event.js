@@ -7,60 +7,29 @@ const DATA_FILE = 'events.json';
 let currentEventId = null;
 let editingGuestId = null;
 
-// Function to fetch events from GitHub
+// Function to fetch events from serverless function
 async function fetchEvents() {
     try {
-        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-        
-        if (response.status === 404) {
-            return [];
+        const response = await fetch('/api/events');
+        if (!response.ok) {
+            throw new Error('Failed to fetch events');
         }
-        
-        const data = await response.json();
-        const content = atob(data.content);
-        return JSON.parse(content);
+        return await response.json();
     } catch (error) {
         console.error('Error fetching events:', error);
         return [];
     }
 }
 
-// Function to save events to GitHub
+// Function to save events using serverless function
 async function saveEvents(events) {
     try {
-        let sha;
-        try {
-            const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                sha = data.sha;
-            }
-        } catch (error) {
-            console.log('File does not exist yet');
-        }
-
-        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
-            method: 'PUT',
+        const response = await fetch('/api/events', {
+            method: 'POST',
             headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                message: 'Update events data',
-                content: btoa(JSON.stringify(events)),
-                sha: sha
-            })
+            body: JSON.stringify(events)
         });
 
         if (!response.ok) {

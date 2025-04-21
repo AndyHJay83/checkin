@@ -20,8 +20,9 @@ jobs:
         
       - name: Build
         run: |
-          echo "GITHUB_TOKEN=${{ secrets.CHECKIN_TOKEN }}" >> .env
-          npm run build
+          mkdir -p public/api
+          cp .github/workflows/api.js public/api/events.js
+          echo "module.exports = { CHECKIN_TOKEN: '${{ secrets.CHECKIN_TOKEN }}' };" > public/api/config.js
           
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
