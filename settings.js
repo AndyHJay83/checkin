@@ -2,9 +2,9 @@ let currentEventId = null;
 let eventToDelete = null;
 
 // GitHub API Configuration
-const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN'; // Replace with your GitHub token
-const REPO_OWNER = 'YOUR_GITHUB_USERNAME'; // Replace with your GitHub username
-const REPO_NAME = 'checkin'; // Replace with your repository name
+const GITHUB_TOKEN = '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';
+const REPO_OWNER = 'andyjay83';
+const REPO_NAME = 'checkin';
 const DATA_FILE = 'events.json';
 
 // Function to fetch events from GitHub
