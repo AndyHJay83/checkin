@@ -1,4 +1,5 @@
 let currentEventId = null;
+let eventToDelete = null;
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelCreateEvent = document.getElementById('cancelCreateEvent');
     const confirmCreateEvent = document.getElementById('confirmCreateEvent');
     const createEventModal = document.getElementById('createEventModal');
+    const deleteEventModal = document.getElementById('deleteEventModal');
+    const cancelDeleteEvent = document.getElementById('cancelDeleteEvent');
+    const confirmDeleteEvent = document.getElementById('confirmDeleteEvent');
 
     // Show create event modal
     if (createEventBtn) {
@@ -58,6 +62,28 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // Hide delete event modal
+    if (cancelDeleteEvent) {
+        cancelDeleteEvent.onclick = function() {
+            deleteEventModal.classList.add('hidden');
+            eventToDelete = null;
+        };
+    }
+
+    // Handle event deletion
+    if (confirmDeleteEvent) {
+        confirmDeleteEvent.onclick = function() {
+            if (eventToDelete) {
+                const events = JSON.parse(localStorage.getItem('events') || '[]');
+                const updatedEvents = events.filter(event => event.id !== eventToDelete);
+                localStorage.setItem('events', JSON.stringify(updatedEvents));
+                deleteEventModal.classList.add('hidden');
+                eventToDelete = null;
+                loadEvents();
+            }
+        };
+    }
+
     // Load existing events
     loadEvents();
 });
@@ -74,14 +100,34 @@ function loadEvents() {
 
     eventsList.innerHTML = events.map(event => `
         <div class="bg-white p-4 rounded-md shadow">
-            <h3 class="font-semibold">${event.name}</h3>
-            <p class="text-sm text-gray-600">${event.guests.length} guest(s)</p>
-            <button onclick="window.location.href='event.html?id=${event.id}'" 
-                    class="mt-2 text-blue-500 hover:text-blue-700">
-                Manage Guests
-            </button>
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="font-semibold">${event.name}</h3>
+                    <p class="text-sm text-gray-600">${event.guests.length} guest(s)</p>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="window.location.href='event.html?id=${event.id}'" 
+                            class="text-blue-500 hover:text-blue-700">
+                        Manage Guests
+                    </button>
+                    <button onclick="showDeleteConfirmation('${event.id}', '${event.name}', ${event.guests.length})" 
+                            class="text-red-500 hover:text-red-700">
+                        Delete
+                    </button>
+                </div>
+            </div>
         </div>
     `).join('');
+}
+
+// Function to show delete confirmation
+function showDeleteConfirmation(eventId, eventName, guestCount) {
+    eventToDelete = eventId;
+    const deleteEventModal = document.getElementById('deleteEventModal');
+    const deleteEventWarning = document.getElementById('deleteEventWarning');
+    
+    deleteEventWarning.textContent = `Are you sure you want to delete "${eventName}"? This will also delete ${guestCount} guest(s) associated with this event. This action cannot be undone.`;
+    deleteEventModal.classList.remove('hidden');
 }
 
 // Handle add guest button click
