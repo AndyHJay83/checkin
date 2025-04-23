@@ -41,14 +41,14 @@ function loadEvents(events) {
             <div class="flex justify-between items-start">
                 <div>
                     <h3 class="font-semibold text-dark-green">${event.name}</h3>
-                    <p class="text-sm text-dark-green">${event.guests.length} guest(s)</p>
+                    <p class="text-sm text-dark-green">${event.guests ? event.guests.length : 0} guest(s)</p>
                 </div>
                 <div class="flex space-x-2">
-                    <button onclick="window.location.href='event.html?id=${event.id}'" 
-                            class="text-blue-500 hover:text-blue-700">
+                    <a href="event.html?id=${event.id}" 
+                       class="text-blue-500 hover:text-blue-700">
                         Manage Guests
-                    </button>
-                    <button onclick="showDeleteConfirmation('${event.id}', '${event.name}', ${event.guests.length})" 
+                    </a>
+                    <button onclick="showDeleteConfirmation('${event.id}', '${event.name}', ${event.guests ? event.guests.length : 0})" 
                             class="text-red-500 hover:text-red-700">
                         Delete
                     </button>

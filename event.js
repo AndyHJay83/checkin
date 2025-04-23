@@ -71,6 +71,12 @@ async function loadEventDetails() {
             return;
         }
 
+        // Initialize guests array if it doesn't exist
+        if (!event.guests) {
+            event.guests = [];
+            await saveEvents(events);
+        }
+
         document.getElementById('eventName').textContent = event.name;
         document.getElementById('eventGuests').textContent = `${event.guests.length} guest(s)`;
     } catch (error) {
@@ -86,7 +92,7 @@ async function loadGuests() {
         const event = events.find(e => e.id === currentEventId);
         const guestsList = document.getElementById('guestsList');
 
-        if (!event || !event.guests.length) {
+        if (!event || !event.guests || !event.guests.length) {
             guestsList.innerHTML = '<p class="text-gray-500">No guests added yet</p>';
             return;
         }
