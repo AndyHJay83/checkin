@@ -30,12 +30,14 @@ module.exports = async (req, res) => {
                 throw new Error('Request body must be an array of events');
             }
             
-            // Ensure each event has a guests array
+            // Ensure each event has a guests array and required fields
             const events = req.body.map(event => ({
-                ...event,
+                id: event.id || Date.now().toString(),
+                name: event.name || 'Unnamed Event',
                 guests: event.guests || []
             }));
             
+            // Write to file
             fs.writeFileSync(DATA_FILE, JSON.stringify(events, null, 2));
             console.log('Events saved successfully');
             res.status(200).json({ success: true });
