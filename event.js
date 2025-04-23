@@ -6,16 +6,6 @@ const DATA_FILE = 'events.json';
 let currentEventId = null;
 let editingGuestId = null;
 
-// Function to get the GitHub token
-function getGitHubToken() {
-    const token = localStorage.getItem('github_token');
-    if (!token) {
-        alert('Please set your GitHub token in the settings');
-        return null;
-    }
-    return token;
-}
-
 // Function to fetch events from localStorage
 async function fetchEvents() {
     try {

@@ -22,6 +22,42 @@ async function saveEvents(events) {
     }
 }
 
+// Function to load all events
+function loadEvents(events) {
+    const eventsList = document.getElementById('eventsList');
+    
+    if (!eventsList) {
+        console.error('Events list element not found');
+        return;
+    }
+
+    if (events.length === 0) {
+        eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
+        return;
+    }
+
+    eventsList.innerHTML = events.map(event => `
+        <div class="bg-white p-4 rounded-md shadow">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="font-semibold text-dark-green">${event.name}</h3>
+                    <p class="text-sm text-dark-green">${event.guests.length} guest(s)</p>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="window.location.href='event.html?id=${event.id}'" 
+                            class="text-blue-500 hover:text-blue-700">
+                        Manage Guests
+                    </button>
+                    <button onclick="showDeleteConfirmation('${event.id}', '${event.name}', ${event.guests.length})" 
+                            class="text-red-500 hover:text-red-700">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -122,37 +158,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Function to load all events
-function loadEvents(events) {
-    const eventsList = document.getElementById('eventsList');
-
-    if (events.length === 0) {
-        eventsList.innerHTML = '<p class="text-gray-500">No events created yet</p>';
-        return;
-    }
-
-    eventsList.innerHTML = events.map(event => `
-        <div class="bg-white p-4 rounded-md shadow">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h3 class="font-semibold text-dark-green">${event.name}</h3>
-                    <p class="text-sm text-dark-green">${event.guests.length} guest(s)</p>
-                </div>
-                <div class="flex space-x-2">
-                    <button onclick="window.location.href='event.html?id=${event.id}'" 
-                            class="text-blue-500 hover:text-blue-700">
-                        Manage Guests
-                    </button>
-                    <button onclick="showDeleteConfirmation('${event.id}', '${event.name}', ${event.guests.length})" 
-                            class="text-red-500 hover:text-red-700">
-                        Delete
-                    </button>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
 // Function to show delete confirmation
 function showDeleteConfirmation(eventId, eventName, guestCount) {
     eventToDelete = eventId;
@@ -161,6 +166,27 @@ function showDeleteConfirmation(eventId, eventName, guestCount) {
     
     deleteEventWarning.textContent = `Are you sure you want to delete "${eventName}"? This will also delete ${guestCount} guest(s) associated with this event. This action cannot be undone.`;
     deleteEventModal.classList.remove('hidden');
+}
+
+// Function to handle event deletion
+async function handleDeleteEvent() {
+    if (!eventToDelete) return;
+
+    try {
+        const events = await fetchEvents();
+        const updatedEvents = events.filter(event => event.id !== eventToDelete);
+        await saveEvents(updatedEvents);
+        
+        // Hide modal and reset state
+        document.getElementById('deleteEventModal').classList.add('hidden');
+        eventToDelete = null;
+        
+        // Refresh events list
+        loadEvents(updatedEvents);
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        alert('Error deleting event. Please try again.');
+    }
 }
 
 // Handle add guest button click
