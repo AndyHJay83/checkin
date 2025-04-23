@@ -1,30 +1,11 @@
 let currentEventId = null;
 let eventToDelete = null;
 
-// GitHub Configuration
-const REPO_OWNER = 'andyjay83';
-const REPO_NAME = 'checkin';
-const DATA_FILE = 'events.json';
-
-// Function to get the GitHub token
-function getGitHubToken() {
-    const token = localStorage.getItem('github_token');
-    if (!token) {
-        alert('Please set your GitHub token in the settings');
-        return null;
-    }
-    return token;
-}
-
-// Function to fetch events from GitHub
+// Function to fetch events from the backend server
 async function fetchEvents() {
     try {
-        const response = await fetch(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${DATA_FILE}`);
+        const response = await fetch('http://localhost:3001/api/events');
         if (!response.ok) {
-            if (response.status === 404) {
-                // File doesn't exist yet, return empty array
-                return [];
-            }
             throw new Error('Failed to fetch events');
         }
         return await response.json();
@@ -34,42 +15,15 @@ async function fetchEvents() {
     }
 }
 
-// Function to save events using GitHub API
+// Function to save events using the backend server
 async function saveEvents(events) {
-    const token = getGitHubToken();
-    if (!token) return;
-
     try {
-        // First, get the current file's SHA if it exists
-        let sha = null;
-        try {
-            const getResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            if (getResponse.ok) {
-                const data = await getResponse.json();
-                sha = data.sha;
-            }
-        } catch (error) {
-            console.log('File does not exist yet');
-        }
-
-        // Create or update the file
-        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
-            method: 'PUT',
+        const response = await fetch('http://localhost:3001/api/events', {
+            method: 'POST',
             headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                message: 'Update events data',
-                content: btoa(JSON.stringify(events)),
-                sha: sha
-            })
+            body: JSON.stringify(events)
         });
 
         if (!response.ok) {
