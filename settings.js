@@ -34,41 +34,20 @@ async function fetchEvents() {
     }
 }
 
-// Function to save events using GitHub API
+// Function to save events using GitHub Actions
 async function saveEvents(events) {
-    const token = getGitHubToken();
-    if (!token) return;
-
     try {
-        // First, get the current file's SHA if it exists
-        let sha = null;
-        try {
-            const getResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            if (getResponse.ok) {
-                const data = await getResponse.json();
-                sha = data.sha;
-            }
-        } catch (error) {
-            console.log('File does not exist yet');
-        }
-
-        // Create or update the file
-        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`, {
-            method: 'PUT',
+        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/dispatches`, {
+            method: 'POST',
             headers: {
-                'Authorization': `token ${token}`,
                 'Accept': 'application/vnd.github.v3+json',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                message: 'Update events data',
-                content: btoa(JSON.stringify(events)),
-                sha: sha
+                event_type: 'update_events',
+                client_payload: {
+                    events: JSON.stringify(events)
+                }
             })
         });
 
