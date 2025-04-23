@@ -6,21 +6,44 @@ const DATA_FILE = 'events.json';
 let currentEventId = null;
 let editingGuestId = null;
 
-// Function to fetch events from localStorage
+// Function to get the GitHub token
+function getGitHubToken() {
+    const token = localStorage.getItem('github_token');
+    if (!token) {
+        alert('Please set your GitHub token in the settings');
+        return null;
+    }
+    return token;
+}
+
+// Function to fetch events from the backend server
 async function fetchEvents() {
     try {
-        const events = JSON.parse(localStorage.getItem('events') || '[]');
-        return events;
+        const response = await fetch('http://localhost:3001/api/events');
+        if (!response.ok) {
+            throw new Error('Failed to fetch events');
+        }
+        return await response.json();
     } catch (error) {
         console.error('Error fetching events:', error);
         return [];
     }
 }
 
-// Function to save events to localStorage
+// Function to save events using the backend server
 async function saveEvents(events) {
     try {
-        localStorage.setItem('events', JSON.stringify(events));
+        const response = await fetch('http://localhost:3001/api/events', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(events)
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save events');
+        }
     } catch (error) {
         console.error('Error saving events:', error);
         throw error;
