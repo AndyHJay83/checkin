@@ -16,34 +16,21 @@ function getGitHubToken() {
     return token;
 }
 
-// Function to fetch events from the JSON file
+// Function to fetch events from localStorage
 async function fetchEvents() {
     try {
-        const response = await fetch('events.json');
-        if (!response.ok) {
-            throw new Error('Failed to fetch events');
-        }
-        return await response.json();
+        const events = JSON.parse(localStorage.getItem('events') || '[]');
+        return events;
     } catch (error) {
         console.error('Error fetching events:', error);
         return [];
     }
 }
 
-// Function to save events
+// Function to save events to localStorage
 async function saveEvents(events) {
     try {
-        const response = await fetch('events.json', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(events)
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to save events');
-        }
+        localStorage.setItem('events', JSON.stringify(events));
     } catch (error) {
         console.error('Error saving events:', error);
         throw error;
