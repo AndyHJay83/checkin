@@ -10,7 +10,7 @@ const AuthButton: React.FC = () => {
         <>
           <span className="text-gray-700">{user?.name}</span>
           <button
-            onClick={() => logout({ returnTo: window.location.origin })}
+            onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
             className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
           >
             Log Out
