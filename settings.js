@@ -5,15 +5,40 @@ let eventToDelete = null;
 const REPO_OWNER = 'andyjay83';
 const REPO_NAME = 'checkin';
 const DATA_FILE = 'events.json';
+const TOKEN_STORAGE_KEY = 'github_token';
 
 // Function to get the GitHub token
 function getGitHubToken() {
-    const token = localStorage.getItem('github_token');
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
     if (!token) {
         alert('Please set your GitHub token in the settings');
         return null;
     }
     return token;
+}
+
+// Function to set the GitHub token
+function setGitHubToken(token) {
+    if (!token || typeof token !== 'string') {
+        throw new Error('Invalid token format');
+    }
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+}
+
+// Function to validate GitHub token
+async function validateGitHubToken(token) {
+    try {
+        const response = await fetch('https://api.github.com/user', {
+            headers: {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        return response.ok;
+    } catch (error) {
+        console.error('Error validating token:', error);
+        return false;
+    }
 }
 
 // Function to fetch events from GitHub
