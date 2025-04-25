@@ -37,11 +37,17 @@ async function fetchEvents() {
 // Function to save events using GitHub Actions
 async function saveEvents(events) {
     try {
+        const token = getGitHubToken();
+        if (!token) {
+            throw new Error('GitHub token not found');
+        }
+
         const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/dispatches`, {
             method: 'POST',
             headers: {
                 'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `token ${token}`
             },
             body: JSON.stringify({
                 event_type: 'update_events',
@@ -52,7 +58,8 @@ async function saveEvents(events) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to save events');
+            const errorData = await response.json();
+            throw new Error(`Failed to save events: ${errorData.message || 'Unknown error'}`);
         }
     } catch (error) {
         console.error('Error saving events:', error);
