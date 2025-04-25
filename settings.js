@@ -5,7 +5,7 @@ let eventToDelete = null;
 const REPO_OWNER = 'andyjay83';
 const REPO_NAME = 'checkin';
 const DATA_FILE = 'events.json';
-const TOKEN_STORAGE_KEY = 'github_token';
+const TOKEN_STORAGE_KEY = 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;
 
 // Function to get the GitHub token
 function getGitHubToken() {
