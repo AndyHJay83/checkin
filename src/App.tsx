@@ -5,7 +5,7 @@ import CheckInPage from './pages/CheckInPage';
 import SettingsPage from './pages/SettingsPage';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
-import auth0Config from '../../auth0-config';
+import auth0Config from './auth0-config';
 
 function App() {
   return (
