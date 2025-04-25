@@ -41,6 +41,11 @@ async function validateGitHubToken(token) {
     }
 }
 
+// Expose functions to global scope
+window.setGitHubToken = setGitHubToken;
+window.getGitHubToken = getGitHubToken;
+window.validateGitHubToken = validateGitHubToken;
+
 // Function to fetch events from GitHub
 async function fetchEvents() {
     try {
