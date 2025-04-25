@@ -4,6 +4,7 @@ import { Auth0Provider } from '@auth0/auth0-react';
 import CheckInPage from './pages/CheckInPage';
 import SettingsPage from './pages/SettingsPage';
 import Navbar from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute';
 import auth0Config from '../../auth0-config';
 
 function App() {
@@ -21,7 +22,14 @@ function App() {
           <Navbar />
           <Routes>
             <Route path="/" element={<CheckInPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <SettingsPage />
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
         </div>
       </Router>

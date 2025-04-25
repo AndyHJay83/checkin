@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import AuthButton from './AuthButton';
 
 const Navbar: React.FC = () => {
   return (
@@ -11,7 +12,7 @@ const Navbar: React.FC = () => {
               <span className="text-xl font-bold text-gray-800">Check-In App</span>
             </Link>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
             <Link
               to="/settings"
               className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
@@ -37,6 +38,7 @@ const Navbar: React.FC = () => {
                 />
               </svg>
             </Link>
+            <AuthButton />
           </div>
         </div>
       </div>
