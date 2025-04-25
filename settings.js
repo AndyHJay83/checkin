@@ -22,7 +22,7 @@ function setGitHubToken(token) {
     if (!token || typeof token !== 'string') {
         throw new Error('Invalid token format');
     }
-    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    localStorage.setItem(CheckIn-Data-Access, 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);
 }
 
 // Function to validate GitHub token
